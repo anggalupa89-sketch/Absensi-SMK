@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Masal QR Code Absensi</title>
+    <!-- Library pembuat QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary-purple: #6a0dad;
+            --light-purple: #f3e5f5;
+        }
+        body { font-family: Arial, sans-serif; background-color: var(--light-purple); margin: 0; padding: 20px; }
+        .no-print { background: white; padding: 20px; border-radius: 10px; border: 2px solid var(--primary-purple); max-width: 600px; margin: 0 auto 20px auto; }
+        textarea { width: 100%; height: 150px; padding: 10px; box-sizing: border-box; border: 1px solid var(--primary-purple); border-radius: 5px; }
+        button { background-color: var(--primary-purple); color: white; border: none; padding: 10px 20px; margin-top: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #4a0072; }
+        
+        /* Gaya untuk area cetak (Kertas) */
+        #print-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        .qr-card { 
+            background: white; border: 2px solid var(--primary-purple); 
+            padding: 10px; border-radius: 8px; width: 140px; 
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
+        .qr-card span { margin-top: 8px; font-size: 12px; font-weight: bold; color: var(--primary-purple); }
+        .qr-card small { font-size: 10px; color: #555; }
+        
+        /* Sembunyikan form saat di-print */
+        @media print {
+            .no-print { display: none; }
+            body { background-color: white; }
+            .qr-card { border: 1px solid black; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print">
+        <h2 style="color: var(--primary-purple); margin-top: 0;">Generator QR Code Masal</h2>
+        <p><i>Copy-Paste</i> data siswa dari Excel ke kotak di bawah ini. <br>
+        Format: <b>NIS,Nama,Kelas</b> (Gunakan koma sebagai pemisah).</p>
+        
+        <textarea id="dataInput" placeholder="Contoh:
+1001,Budi Santoso,TKJ A
+1002,Siti Aminah,TKJ B
+1980,Pak Guru Budi,Guru"></textarea>
+        
+        <br>
+        <button onclick="generateQR()">1. Buat QR Code</button>
+        <button onclick="window.print()" style="background-color: #2e7d32;">2. Print QR Code</button>
+    </div>
+
+    <!-- Area QR Code akan muncul di sini -->
+    <div id="print-area"></div>
+
+    <script>
+        function generateQR() {
+            const printArea = document.getElementById("print-area");
+            printArea.innerHTML = ""; // Bersihkan layar sebelumnya
+            
+            const dataText = document.getElementById("dataInput").value;
+            // Memecah setiap baris data
+            const barisData = dataText.split('\n');
+
+            barisData.forEach(baris => {
+                if(baris.trim() !== "") {
+                    // Memecah data berdasarkan koma (NIS, Nama, Kelas)
+                    const kolom = baris.split(",");
+                    if(kolom.length === 3) {
+                        const nis = kolom[0].trim();
+                        const nama = kolom[1].trim();
+                        const kelas = kolom[2].trim();
+                        
+                        // Format teks yang akan dimasukkan ke QR: NIS|Nama|Kelas
+                        const formatQR = `${nis}|${nama}|${kelas}`;
+
+                        // Membuat kotak desain untuk QR
+                        const card = document.createElement("div");
+                        card.className = "qr-card";
+                        
+                        const qrDiv = document.createElement("div");
+                        
+                        // Render QR Code
+                        new QRCode(qrDiv, {
+                            text: formatQR,
+                            width: 100,
+                            height: 100
+                        });
+
+                        const namaTeks = document.createElement("span");
+                        namaTeks.innerText = nama;
+                        
+                        const kelasTeks = document.createElement("small");
+                        kelasTeks.innerText = kelas + " (" + nis + ")";
+
+                        card.appendChild(qrDiv);
+                        card.appendChild(namaTeks);
+                        card.appendChild(kelasTeks);
+                        printArea.appendChild(card);
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
