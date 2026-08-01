@@ -10,7 +10,6 @@
         :root {
             --primary-purple: #6a0dad;
             --light-purple: #f3e5f5;
-            --accent-purple: #9c27b0;
         }
         body {
             background-color: var(--light-purple);
@@ -34,9 +33,9 @@
         }
         .container {
             background: white; 
-            padding: 20px; 
+            padding: 15px; 
             border-radius: 10px;
-            margin-top: 20px; 
+            margin-top: 15px; 
             border: 2px solid var(--primary-purple);
             width: 90%; 
             max-width: 400px; 
@@ -44,46 +43,44 @@
             box-shadow: 0 5px 15px rgba(106, 13, 173, 0.2);
         }
         .radio-group { 
-            margin-bottom: 20px; 
+            margin-bottom: 15px; 
             background: #ede7f6;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             border: 1px dashed var(--primary-purple);
         }
         .radio-group label { 
-            margin: 0 10px; 
+            margin: 0 8px; 
             font-weight: bold; 
             color: var(--primary-purple);
             cursor: pointer;
-            font-size: 16px;
+            font-size: 15px;
         }
         #reader {
             width: 100%;
         }
         #result { 
             display: none; 
-            margin-top: 15px; 
-            padding: 15px; 
+            margin-top: 10px; 
+            padding: 12px; 
             border-radius: 5px; 
             font-weight: bold;
-            font-size: 16px;
+            font-size: 15px;
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>Absensi Sekolah Digital</h2>
+        <h2>Absensi Kilat Digital</h2>
         <p>10 PS | 10 TKJ A | 10 TKJ B & Guru</p>
     </div>
 
     <div class="container">
-        <h3 style="color: var(--primary-purple); margin-top: 0;">Pilih Status Absen:</h3>
-        
         <!-- Pilihan Datang atau Pulang -->
         <div class="radio-group">
             <input type="radio" id="datang" name="status" value="Datang" checked>
-            <label for="datang">🟢 Masuk (Datang)</label>
+            <label for="datang">🟢 Masuk</label>
             
             <input type="radio" id="pulang" name="status" value="Pulang">
             <label for="pulang">🟣 Pulang</label>
@@ -93,7 +90,7 @@
         <div id="reader"></div>
         
         <!-- Area Notifikasi Hasil -->
-        <div id="result">Hasil scan akan muncul di sini...</div>
+        <div id="result">Siap memindai...</div>
     </div>
 
     <script>
@@ -101,11 +98,20 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbw9vUXOdGPFUbtkgO-mkAXWhU-Nl_eM2i1xFnULCvfxVyws_m4mxaBUr0DycBHdOpxUFQ/exec';
         
         let isProcessing = false;
+        let audioCtx = null;
 
-        // Fungsi pembuat suara Beep otomatis (Tanpa file eksternal)
+        // Inisialisasi Audio saat layar pertama kali disentuh (mengatasi blokir browser)
+        document.body.addEventListener('click', () => {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }, { once: true });
+
         function playBeep(type) {
             try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
                 
@@ -113,25 +119,24 @@
                 gainNode.connect(audioCtx.destination);
                 
                 if (type === 'datang') {
-                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Suara beep nada tinggi
+                    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // Tinggi (Cepat)
                 } else if (type === 'pulang') {
-                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime); // Suara beep nada rendah
+                    oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // Sedang
                 } else {
-                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime); // Suara error (rendah banget)
+                    oscillator.frequency.setValueAtTime(220, audioCtx.currentTime); // Rendah (Error)
                 }
                 
                 oscillator.type = 'sine';
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
                 
                 oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.15); // Durasi bunyi 0.15 detik
+                oscillator.stop(audioCtx.currentTime + 0.1); // Durasi dipercepat jadi 0.1 detik
             } catch(e) {
-                console.log("Audio tidak didukung browser");
+                console.log("Audio error");
             }
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // PROTEKSI ANTI-SCAN BERULANG (Jeda 4 detik agar tidak tidak sengaja scan dobel)
             if (isProcessing) return; 
             isProcessing = true;
 
@@ -141,12 +146,13 @@
             resultBox.style.display = "block";
             resultBox.style.backgroundColor = "#d1c4e9";
             resultBox.style.color = "#311b92";
-            resultBox.innerText = "⏳ Memproses data...";
+            resultBox.innerText = "⏳ Menyimpan...";
 
             const formData = new URLSearchParams();
             formData.append('dataQR', decodedText);
             formData.append('status', statusAbsen);
 
+            // Kirim data ke Google Sheets secara background
             fetch(scriptURL, { method: 'POST', body: formData})
                 .then(response => response.text())
                 .then(result => {
@@ -155,18 +161,16 @@
                     let pesanRes = responseSplit[1];
 
                     if (statusRes === "DOUBLE") {
-                        playBeep('error'); // Suara peringatan
+                        playBeep('error');
                         resultBox.style.backgroundColor = "#ff9800"; // Oranye
                         resultBox.style.color = "white";
                         resultBox.innerText = "⚠️ " + pesanRes;
                     } else if (statusRes === "SUKSES") {
-                        // Membedakan suara beep berdasarkan jenis absen (Datang / Pulang)
                         if (statusAbsen === "Datang") {
                             playBeep('datang');
                         } else {
                             playBeep('pulang');
                         }
-
                         resultBox.style.backgroundColor = "#4caf50"; // Hijau
                         resultBox.style.color = "white";
                         resultBox.innerText = "✅ " + pesanRes;
@@ -177,29 +181,29 @@
                         resultBox.innerText = result;
                     }
 
-                    // Jeda waktu 4 detik sebelum kamera bisa scan barcode berikutnya (Mencegah scan tidak sengaja)
+                    // DIKEBUT: Jeda dipercepat menjadi HANYA 1.5 DETIK agar siswa berikutnya bisa langsung scan!
                     setTimeout(() => { 
                         resultBox.style.display = "none";
                         isProcessing = false; 
-                    }, 4000);
+                    }, 1500);
                 })
                 .catch(error => {
                     playBeep('error');
                     resultBox.style.backgroundColor = "#f44336"; // Merah
                     resultBox.style.color = "white";
-                    resultBox.innerText = "❌ Gagal terhubung ke server!";
+                    resultBox.innerText = "❌ Gagal koneksi!";
                     
                     setTimeout(() => { 
                         resultBox.style.display = "none";
                         isProcessing = false; 
-                    }, 4000);
+                    }, 1500);
                 });
         }
 
-        // Inisialisasi Kamera Scanner
+        // DIKEBUT: FPS dinaikkan ke 25 agar kamera jauh lebih responsif menangkap barcode
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-            fps: 10, 
-            qrbox: {width: 250, height: 250} 
+            fps: 25, 
+            qrbox: {width: 230, height: 230} 
         }, false);
         
         html5QrcodeScanner.render(onScanSuccess);
