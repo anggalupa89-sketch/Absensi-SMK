@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Smart School</title>
+    <!-- Library untuk Scanner QR/Barcode -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        /* Pengaturan Tema Warna */
+        :root {
+            --primary-purple: #6a0dad;
+            --light-purple: #f3e5f5;
+            --accent-purple: #9c27b0;
+        }
+        body {
+            background-color: var(--light-purple);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+        }
+        .header {
+            background-color: var(--primary-purple); 
+            color: white;
+            width: 100%; 
+            text-align: center; 
+            padding: 15px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+        }
+        .container {
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px;
+            margin-top: 20px; 
+            border: 2px solid var(--primary-purple);
+            width: 90%; 
+            max-width: 400px; 
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(106, 13, 173, 0.2);
+        }
+        .radio-group { 
+            margin-bottom: 20px; 
+            background: var(--light-purple);
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .radio-group label { 
+            margin: 0 10px; 
+            font-weight: bold; 
+            color: var(--primary-purple);
+            cursor: pointer;
+        }
+        #reader {
+            width: 100%;
+        }
+        #result { 
+            display: none; 
+            margin-top: 15px; 
+            padding: 15px; 
+            border-radius: 5px; 
+            font-weight: bold;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Absensi Sekolah Digital</h2>
+        <p>Perbankan Syariah | TKJ A | TKJ B</p>
+    </div>
+
+    <div class="container">
+        <h3 style="color: var(--primary-purple); margin-top: 0;">Pilih Status Absen:</h3>
+        
+        <!-- Pilihan Datang atau Pulang -->
+        <div class="radio-group">
+            <input type="radio" id="datang" name="status" value="Datang" checked>
+            <label for="datang">Masuk (Datang)</label>
+            
+            <input type="radio" id="pulang" name="status" value="Pulang">
+            <label for="pulang">Pulang</label>
+        </div>
+
+        <!-- Area Kamera Scanner -->
+        <div id="reader"></div>
+        
+        <!-- Area Notifikasi Hasil -->
+        <div id="result">Hasil scan akan muncul di sini...</div>
+    </div>
+
+    <script>
+        // PERHATIAN: GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
+        const scriptURL = 'MASUKKAN_URL_WEB_APP_GOOGLE_SCRIPT_DI_SINI';
+        
+        let isProcessing = false;
+
+        function onScanSuccess(decodedText, decodedResult) {
+            if (isProcessing) return; // Mencegah scan berulang saat sedang memproses
+            isProcessing = true;
+
+            // Ambil status apakah Masuk atau Pulang
+            const statusAbsen = document.querySelector('input[name="status"]:checked').value;
+            const resultBox = document.getElementById('result');
+            
+            // Tampilkan pesan loading
+            resultBox.style.display = "block";
+            resultBox.style.backgroundColor = "#d1c4e9"; // Ungu muda
+            resultBox.style.color = "#311b92"; // Ungu tua
+            resultBox.innerText = "⏳ Mengecek data absen...";
+
+            // Siapkan data untuk dikirim ke Google Sheets
+            const formData = new URLSearchParams();
+            formData.append('dataQR', decodedText);
+            formData.append('status', statusAbsen);
+
+            // Kirim data ke server (Google Sheets)
+            fetch(scriptURL, { method: 'POST', body: formData})
+                .then(response => response.text())
+                .then(result => {
+                    // Memecah pesan dari Google Script ("STATUS|Pesan")
+                    let responseSplit = result.split("|");
+                    let statusRes = responseSplit[0];
+                    let pesanRes = responseSplit[1];
+
+                    if (statusRes === "DOUBLE") {
+                        resultBox.style.backgroundColor = "#ff9800"; // Oranye - Peringatan
+                        resultBox.style.color = "white";
+                        resultBox.innerText = "❌ " + pesanRes;
+                    } else if (statusRes === "SUKSES") {
+                        resultBox.style.backgroundColor = "#4caf50"; // Hijau - Sukses
+                        resultBox.style.color = "white";
+                        resultBox.innerText = "✅ " + pesanRes;
+                    } else {
+                        resultBox.style.backgroundColor = "#2196f3"; // Biru - Sukses/Pesan lain
+                        resultBox.style.color = "white";
+                        resultBox.innerText = result; // Jaga-jaga jika format balasan beda
+                    }
+
+                    // Reset layar setelah 3.5 detik agar siap scan murid berikutnya
+                    setTimeout(() => { 
+                        resultBox.style.display = "none";
+                        isProcessing = false; 
+                    }, 3500);
+                })
+                .catch(error => {
+                    resultBox.style.backgroundColor = "#f44336"; // Merah - Error jaringan
+                    resultBox.style.color = "white";
+                    resultBox.innerText = "⚠️ Gagal terhubung ke server! Cek koneksi internet.";
+                    
+                    setTimeout(() => { 
+                        resultBox.style.display = "none";
+                        isProcessing = false; 
+                    }, 3500);
+                });
+        }
+
+        // Inisialisasi Kamera Scanner
+        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+            fps: 10, 
+            qrbox: {width: 250, height: 250} 
+        }, false);
+        
+        html5QrcodeScanner.render(onScanSuccess);
+    </script>
+</body>
+</html>
