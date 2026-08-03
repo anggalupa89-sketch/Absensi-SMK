@@ -3,377 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Attendance | Absensi Sekolah</title>
+    <title>Smart Attendance | Ultra Fast Scanner</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
             --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
             --text-main: #1e293b;
             --text-muted: #64748b;
             --card-bg: #ffffff;
             --radius: 16px;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background: var(--bg-gradient);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #312e81;
-            letter-spacing: -0.5px;
-        }
-
-        .header p {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 4px;
-            font-weight: 500;
-        }
-
-        .main-card {
-            background: var(--card-bg);
-            width: 100%;
-            max-width: 440px;
-            border-radius: var(--radius);
-            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1), 0 8px 10px -6px rgba(99, 102, 241, 0.1);
-            padding: 24px;
-            border: 1px solid rgba(226, 232, 240, 0.8);
-        }
-
-        .status-selector {
-            display: flex;
-            background: #f1f5f9;
-            padding: 4px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .status-option {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-            z-index: 2;
-            transition: all 0.3s ease;
-            border-radius: 10px;
-        }
-
-        .status-option.active {
-            color: #ffffff;
-            background: var(--primary);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-        }
-
-        input[type="radio"] {
-            display: none;
-        }
-
-        #reader {
-            width: 100% !important;
-            border-radius: 12px !important;
-            overflow: hidden;
-            border: none !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        #reader video {
-            border-radius: 12px;
-        }
-
-        #result {
-            display: none;
-            margin-top: 16px;
-            padding: 14px 16px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            text-align: center;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .recent-section {
-            margin-top: 24px;
-            width: 100%;
-            max-width: 440px;
-        }
-
-        .recent-header {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .recent-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-height: 180px;
-            overflow-y: auto;
-        }
-
-        .recent-item {
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid #e2e8f0;
-            padding: 10px 14px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-        }
-
-        .recent-name {
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        .recent-badge {
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .badge-datang {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .badge-pulang {
-            background: #ede9fe;
-            color: #5b21b6;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 15px; }
+        .header { text-align: center; margin-bottom: 15px; }
+        .header h1 { font-size: 22px; font-weight: 700; color: #312e81; }
+        .header p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .main-card { background: var(--card-bg); width: 100%; max-width: 420px; border-radius: var(--radius); box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1); padding: 20px; border: 1px solid rgba(226, 232, 240, 0.8); }
+        .mode-indicator { background: #e0e7ff; color: #3730a3; font-weight: 600; font-size: 12px; padding: 8px; border-radius: 8px; margin-bottom: 12px; text-align: center; }
+        #reader { width: 100% !important; border-radius: 12px !important; overflow: hidden; border: none !important; }
+        #reader video { border-radius: 12px; }
+        .manual-section { margin-top: 15px; border-top: 1px dashed #cbd5e1; padding-top: 12px; }
+        .manual-title { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
+        .manual-form { display: flex; flex-direction: column; gap: 8px; }
+        .manual-form input, .manual-form select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; }
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 9px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-submit:hover { background: #4f46e5; }
+        #result { display: none; margin-top: 12px; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 13px; text-align: center; }
+        .recent-section { margin-top: 15px; width: 100%; max-width: 420px; }
+        .recent-header { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .recent-list { display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto; }
+        .recent-item { background: rgba(255, 255, 255, 0.8); border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        .recent-name { font-weight: 600; }
+        .recent-badge { font-size: 10px; padding: 2px 6px; border-radius: 20px; font-weight: 600; }
+        .badge-datang { background: #d1fae5; color: #065f46; }
+        .badge-telat { background: #fee2e2; color: #991b1b; }
+        .badge-pulang { background: #ede9fe; color: #5b21b6; }
+        .badge-sakit { background: #fef3c7; color: #92400e; }
+        .badge-izin { background: #e0f2fe; color: #0369a1; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>Absensi Digital</h1>
-        <p>SMART SCHOOL MONITORING SYSTEM</p>
+        <h1>Absensi Kilat Sekolah</h1>
+        <p>Batas Masuk: 06.45 | Auto-Detect & Ultra-Fast Scan</p>
     </div>
 
     <div class="main-card">
-        <!-- Pilihan Mode Modern -->
-        <div class="status-selector" id="statusSelector">
-            <label class="status-option active" id="labelDatang">
-                <input type="radio" id="datang" name="status" value="Datang" checked>
-                🟢 Masuk
-            </label>
-            <label class="status-option" id="labelPulang">
-                <input type="radio" id="pulang" name="status" value="Pulang">
-                🟣 Pulang
-            </label>
+        <div class="mode-indicator">
+            ⚡ Mode Cepat Aktif (< 1 Detik)
         </div>
 
-        <!-- Kamera Scanner -->
         <div id="reader"></div>
+
+        <div class="manual-section">
+            <div class="manual-title">Input Manual Piket</div>
+            <div class="manual-form">
+                <input type="text" id="manualInput" placeholder="Ketik Nama atau NIS Siswa...">
+                <select id="manualStatus">
+                    <option value="Sakit">Sakit</option>
+                    <option value="Izin">Izin</option>
+                    <option value="Datang">Manual Masuk</option>
+                    <option value="Pulang">Manual Pulang</option>
+                </select>
+                <button class="btn-submit" onclick="submitManual()">Simpan Manual</button>
+            </div>
+        </div>
         
-        <!-- Kotak Informasi Hasil Scan -->
         <div id="result"></div>
     </div>
 
-    <!-- Riwayat Aktivitas Langsung (Live Log) -->
     <div class="recent-section">
         <div class="recent-header">
-            <span>Aktivitas Scan Hari Ini</span>
-            <span id="scanCount" style="font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 6px;">0 siswa</span>
+            <span>Aktivitas Hari Ini</span>
+            <span id="scanCount" style="font-size: 10px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">0</span>
         </div>
         <div class="recent-list" id="recentList">
-            <div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 15px;">Belum ada siswa yang scan hari ini</div>
+            <div style="text-align: center; color: var(--text-muted); font-size: 11px; padding: 10px;">Belum ada aktivitas</div>
         </div>
     </div>
 
     <script>
-        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbw9vUXOdGPFUbtkgO-mkAXWhU-Nl_eM2i1xFnULCvfxVyws_m4mxaBUr0DycBHdOpxUFQ/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbz9RT0IFONDFT58FXQExkYgsy_9wVn5RwM-QHqgMj2M2ATIX3tgPOIEzl7nGfRoFtTRsw/exec';
         let isProcessing = false;
         let audioCtx = null;
         let recentScans = [];
 
-        // Toggle UI Active State untuk Tombol Pilihan
-        const radioDatang = document.getElementById('datang');
-        const radioPulang = document.getElementById('pulang');
-        const labelDatang = document.getElementById('labelDatang');
-        const labelPulang = document.getElementById('labelPulang');
-
-        radioDatang.addEventListener('change', () => {
-            if(radioDatang.checked) {
-                labelDatang.classList.add('active');
-                labelPulang.classList.remove('active');
-            }
-        });
-
-        radioPulang.addEventListener('change', () => {
-            if(radioPulang.checked) {
-                labelPulang.classList.add('active');
-                labelDatang.classList.remove('active');
-            }
-        });
-
         document.body.addEventListener('click', () => {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }, { once: true });
 
         function playBeep(type) {
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
                 
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
+                if (type === 'success') osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                else if (type === 'telat') osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                else osc.frequency.setValueAtTime(200, audioCtx.currentTime);
                 
-                if (type === 'datang') {
-                    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-                } else if (type === 'pulang') {
-                    oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
-                } else {
-                    oscillator.frequency.setValueAtTime(220, audioCtx.currentTime);
-                }
-                
-                oscillator.type = 'sine';
-                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.1);
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
             } catch(e) {}
         }
 
         function addRecentScan(name, status, time) {
             recentScans.unshift({ name, status, time });
-            if(recentScans.length > 5) recentScans.pop(); // Batasi tampilkan 5 aktivitas terakhir
+            if(recentScans.length > 5) recentScans.pop();
 
             const listEl = document.getElementById('recentList');
-            document.getElementById('scanCount').innerText = `${recentScans.length} terbaru`;
+            document.getElementById('scanCount').innerText = recentScans.length;
             
             listEl.innerHTML = '';
             recentScans.forEach(item => {
-                const badgeClass = item.status === 'Datang' ? 'badge-datang' : 'badge-pulang';
+                let badgeClass = 'badge-datang';
+                if(item.status === 'Telat') badgeClass = 'badge-telat';
+                else if(item.status === 'Pulang') badgeClass = 'badge-pulang';
+                else if(item.status === 'Sakit') badgeClass = 'badge-sakit';
+                else if(item.status === 'Izin') badgeClass = 'badge-izin';
+
                 listEl.innerHTML += `
                     <div class="recent-item">
                         <span class="recent-name">${item.name}</span>
                         <div>
                             <span class="recent-badge ${badgeClass}">${item.status}</span>
-                            <span style="font-size: 11px; color: var(--text-muted); margin-left: 6px;">${item.time}</span>
+                            <span style="font-size: 10px; color: var(--text-muted); margin-left: 4px;">${item.time}</span>
                         </div>
                     </div>
                 `;
             });
         }
 
-        function onScanSuccess(decodedText, decodedResult) {
-            if (isProcessing) return; 
+        function processAbsen(keyword, statusKustom = null) {
+            if (isProcessing) return;
             isProcessing = true;
 
-            const statusAbsen = document.querySelector('input[name="status"]:checked').value;
             const resultBox = document.getElementById('result');
-            
             resultBox.style.display = "block";
             resultBox.style.backgroundColor = "#e0e7ff";
             resultBox.style.color = "#3730a3";
-            resultBox.innerText = "⏳ Memeriksa data...";
+            resultBox.innerText = "⏳ Memproses...";
 
             const formData = new URLSearchParams();
-            formData.append('dataQR', decodedText);
-            formData.append('status', statusAbsen);
+            formData.append('dataQR', keyword);
+            if (statusKustom) formData.append('status', statusKustom);
 
             fetch(scriptURL, { method: 'POST', body: formData})
                 .then(response => response.text())
                 .then(result => {
-                    let responseSplit = result.split("|");
-                    let statusRes = responseSplit[0];
-                    let pesanRes = responseSplit[1];
-
-                    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    let partsRes = result.split("|");
+                    let statusRes = partsRes[0];
+                    let pesanRes = partsRes[1];
+                    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                     if (statusRes === "DOUBLE") {
                         playBeep('error');
                         resultBox.style.backgroundColor = "#fef3c7";
                         resultBox.style.color = "#92400e";
-                        resultBox.innerText = "⚠️ " + pesanRes; // Pesan otomatis mendeteksi jika siswa sudah absen sebelumnya!
+                        resultBox.innerText = "⚠️ " + pesanRes;
                     } else if (statusRes === "SUKSES") {
-                        if (statusAbsen === "Datang") playBeep('datang');
-                        else playBeep('pulang');
+                        let displayedStatus = statusKustom ? statusKustom : (pesanRes.startsWith("Telat") ? "Telat" : (pesanRes.startsWith("Datang") ? "Datang" : "Pulang"));
+                        
+                        if (displayedStatus === "Telat") playBeep('telat');
+                        else playBeep('success');
 
-                        resultBox.style.backgroundColor = "#d1fae5";
-                        resultBox.style.color = "#065f46";
+                        resultBox.style.backgroundColor = displayedStatus === "Telat" ? "#fee2e2" : "#d1fae5";
+                        resultBox.style.color = displayedStatus === "Telat" ? "#991b1b" : "#065f46";
                         resultBox.innerText = "✅ " + pesanRes;
 
-                        // Ambil nama siswa untuk masuk ke daftar riwayat langsung
-                        let parts = pesanRes.split(":");
-                        let studentName = parts.length > 1 ? parts[1].trim() : decodedText;
-                        addRecentScan(studentName, statusAbsen, currentTime);
+                        let studentName = pesanRes.includes(":") ? pesanRes.split(":")[1].trim() : keyword;
+                        addRecentScan(studentName, displayedStatus, currentTime);
+                        document.getElementById('manualInput').value = '';
                     } else {
-                        playBeep('datang');
-                        resultBox.style.backgroundColor = "#e0f2fe";
-                        resultBox.style.color = "#0369a1";
+                        playBeep('error');
+                        resultBox.style.backgroundColor = "#fee2e2";
+                        resultBox.style.color = "#991b1b";
                         resultBox.innerText = result;
                     }
 
+                    // DIKEBUT: Jeda dipangkas jadi 900 milidetik (0.9 detik) agar super kilat!
                     setTimeout(() => { 
                         resultBox.style.display = "none";
                         isProcessing = false; 
-                    }, 1500);
+                    }, 900);
                 })
                 .catch(error => {
                     playBeep('error');
                     resultBox.style.backgroundColor = "#fee2e2";
                     resultBox.style.color = "#991b1b";
-                    resultBox.innerText = "❌ Gagal terhubung ke server!";
-                    
+                    resultBox.innerText = "❌ Gangguan koneksi!";
                     setTimeout(() => { 
                         resultBox.style.display = "none";
                         isProcessing = false; 
-                    }, 1500);
+                    }, 900);
                 });
         }
 
+        function onScanSuccess(decodedText) {
+            processAbsen(decodedText, null);
+        }
+
+        function submitManual() {
+            const keyword = document.getElementById('manualInput').value.trim();
+            const status = document.getElementById('manualStatus').value;
+            if (!keyword) {
+                alert("Ketik Nama atau NIS terlebih dahulu!");
+                return;
+            }
+            processAbsen(keyword, status);
+        }
+
+        // DIOPTIMASI: FPS 30 agar pembacaan barcode instan < 1 detik
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-            fps: 25, 
-            qrbox: {width: 230, height: 230} 
+            fps: 30, 
+            qrbox: {width: 200, height: 200} 
         }, false);
         
         html5QrcodeScanner.render(onScanSuccess);
