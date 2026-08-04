@@ -77,7 +77,6 @@
             border-radius: 8px; 
             font-weight: bold;
             font-size: 15px;
-            animation: fadeIn 0.3s ease-in-out;
         }
 
         .manual-input {
@@ -129,8 +128,6 @@
             justify-content: space-between;
         }
         .history-time { color: #888; font-size: 12px; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -152,6 +149,7 @@
 
         <div id="reader"></div>
         
+        <!-- Kotak Hasil/Debug -->
         <div id="result">Hasil scan akan muncul di sini...</div>
 
         <div class="manual-input">
@@ -169,7 +167,6 @@
 
     <script>
         const scriptURL = 'https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec';
-        
         let isProcessing = false;
 
         function playBeep(type) {
@@ -177,30 +174,19 @@
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
-                
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
-                
-                if (type === 'datang') {
-                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); 
-                } else if (type === 'pulang') {
-                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime); 
-                } else {
-                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime); 
-                }
-                
+                oscillator.frequency.setValueAtTime(type === 'datang' ? 800 : 400, audioCtx.currentTime); 
                 oscillator.type = 'sine';
                 gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + 0.15); 
-            } catch(e) { console.log("Audio tidak didukung"); }
+            } catch(e) {}
         }
 
         function kirimManual() {
             const nis = document.getElementById('input-manual').value;
             const nisBersih = nis.trim().replace(/\s+/g, '');
-            
             if(!nisBersih) { alert("NIS tidak boleh kosong!"); return; }
             document.getElementById('input-manual').value = ""; 
             prosesKeSheets(nisBersih);
@@ -210,25 +196,36 @@
             if (e.key === 'Enter') kirimManual();
         });
 
+        // ==========================================
+        // FITUR PENGECEK HASIL SCAN (DEBUGGER)
+        // ==========================================
         function onScanSuccess(decodedText, decodedResult) {
+            if (isProcessing) return;
+            
+            // Tampilkan teks mentah yang dibaca kamera ke kotak hasil di layar
+            const resultBox = document.getElementById('result');
+            resultBox.style.display = "block";
+            resultBox.style.backgroundColor = "#ffeb3b"; // Warna Kuning
+            resultBox.style.color = "#000";
+            resultBox.innerText = "🔍 Terbaca Kamera: [" + decodedText + "]";
+
             let teksBersih = decodedText.trim().replace(/\s+/g, '');
-            prosesKeSheets(teksBersih);
+            
+            // Kirim setelah 1.5 detik agar Anda sempat membaca teks kuningnya
+            setTimeout(() => {
+                prosesKeSheets(teksBersih);
+            }, 1500);
         }
 
-        // MENGGUNAKAN METODE GET (DIJAMIN MASUK KE GOOGLE APPS SCRIPT TANPA BLOKIR)
         function prosesKeSheets(dataTeks) {
-            if (isProcessing) return; 
             isProcessing = true;
-
             const statusAbsen = document.querySelector('input[name="status"]:checked').value;
             const resultBox = document.getElementById('result');
             
-            resultBox.style.display = "block";
             resultBox.style.backgroundColor = "#d1c4e9";
             resultBox.style.color = "#311b92";
-            resultBox.innerText = "⏳ Memproses data...";
+            resultBox.innerText = "⏳ Mengirim [" + dataTeks + "] ke Sheets...";
 
-            // Gabungkan parameter langsung ke dalam URL (Metode GET)
             const targetUrl = `${scriptURL}?dataQR=${encodeURIComponent(dataTeks)}&status=${encodeURIComponent(statusAbsen)}`;
 
             fetch(targetUrl)
@@ -244,13 +241,10 @@
                         resultBox.style.color = "white";
                         resultBox.innerText = "⚠️ " + pesanRes;
                     } else if (statusRes === "SUKSES") {
-                        if (statusAbsen === "Datang") playBeep('datang');
-                        else playBeep('pulang');
-
+                        playBeep('datang');
                         resultBox.style.backgroundColor = "var(--success)"; 
                         resultBox.style.color = "white";
                         resultBox.innerText = "✅ " + pesanRes;
-
                         tambahKeRiwayat(pesanRes, statusAbsen);
                     } else {
                         playBeep('error');
@@ -268,8 +262,7 @@
                     playBeep('error');
                     resultBox.style.backgroundColor = "var(--danger)"; 
                     resultBox.style.color = "white";
-                    resultBox.innerText = "❌ Gagal terhubung ke server!";
-                    
+                    resultBox.innerText = "❌ Gagal koneksi!";
                     setTimeout(() => { 
                         resultBox.style.display = "none";
                         isProcessing = false; 
@@ -279,27 +272,15 @@
 
         function tambahKeRiwayat(pesan, status) {
             const listContainer = document.getElementById('riwayat-list');
-            
-            if(listContainer.innerHTML.includes("Belum ada data")) {
-                listContainer.innerHTML = "";
-            }
-
+            if(listContainer.innerHTML.includes("Belum ada data")) { listContainer.innerHTML = ""; }
             const waktu = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-            
             const div = document.createElement('div');
             div.className = 'history-item';
-            div.innerHTML = `
-                <div><strong>${pesan.replace('Berhasil absen: ', '')}</strong> <span style="font-size:11px; color:#9c27b0;">(${status})</span></div>
-                <div class="history-time">${waktu}</div>
-            `;
-            
+            div.innerHTML = `<div><strong>${pesan}</strong></div><div class="history-time">${waktu}</div>`;
             listContainer.prepend(div);
         }
 
-        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-            fps: 10 
-        }, false);
-        
+        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10 }, false);
         html5QrcodeScanner.render(onScanSuccess);
     </script>
 </body>
