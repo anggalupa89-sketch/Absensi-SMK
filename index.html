@@ -35,14 +35,14 @@
         // ==========================================
         // GANTI URL DI BAWAH INI DENGAN URL WEB APP TERBARU ANDA
         // ==========================================
-        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec";
+        const URL_APPS_SCRIPT = "PASTE_URL_WEB_APP_ANDA_DISINI";
 
         let isProcessing = false;
+        let html5QrCode;
 
         function onScanSuccess(decodedText, decodedResult) {
-            if (isProcessing) return; // Mencegah scan beruntun dalam waktu bersamaan
+            if (isProcessing) return;
             isProcessing = true;
-
             console.log(`Scan berhasil: ${decodedText}`);
             kirimKeGoogleSheets(decodedText);
         }
@@ -65,7 +65,6 @@
             resultDiv.className = "p-4 rounded-lg text-center font-medium mb-4 bg-blue-100 text-blue-800";
             resultDiv.innerHTML = "Mengirim data...";
 
-            // Mengirim data menggunakan parameter ?dataQR= agar pasti tertangkap oleh Apps Script
             const targetUrl = `${URL_APPS_SCRIPT}?dataQR=${encodeURIComponent(nisOrData)}`;
 
             fetch(targetUrl)
@@ -84,7 +83,6 @@
                         resultDiv.innerHTML = resText.replace("ERROR|", "GAGAL: ");
                     }
 
-                    // Reset status jeda setelah 3 detik agar bisa scan siswa berikutnya
                     setTimeout(() => {
                         isProcessing = false;
                     }, 3000);
@@ -97,20 +95,50 @@
                 });
         }
 
-        // Inisialisasi Kamera Scanner
+        // Deteksi dan Pilih Kamera secara Pintar
         document.addEventListener("DOMContentLoaded", function () {
-            const html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            html5QrCode = new Html5Qrcode("reader");
+            
+            // Cari daftar kamera yang tersedia di HP
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    // Cari kamera belakang (biasanya berlabel "back", "rear", atau ambil kamera terakhir/utama)
+                    let selectedCameraId = devices[0].id;
+                    
+                    for (let i = 0; i < devices.length; i++) {
+                        let label = devices[i].label.toLowerCase();
+                        if (label.includes("back") || label.includes("rear") || label.includes("belakang") || label.includes("utama")) {
+                            selectedCameraId = devices[i].id;
+                            break;
+                        }
+                    }
 
-            html5QrCode.start(
-                { facingMode: "environment" }, // Menggunakan kamera belakang HP
-                config,
-                onScanSuccess
-            ).catch(err => {
-                console.error("Gagal membuka kamera:", err);
-                alert("Tidak dapat mengakses kamera. Pastikan izin kamera di browser sudah diaktifkan.");
+                    // Mulai scanner menggunakan kamera yang terpilih
+                    html5QrCode.start(
+                        selectedCameraId,
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        onScanSuccess
+                    ).catch(err => {
+                        console.error("Gagal menyalakan kamera pilihan:", err);
+                        fallbackKameraUtama();
+                    });
+                } else {
+                    alert("Tidak ada kamera yang terdeteksi di perangkat ini.");
+                }
+            }).catch(err => {
+                console.error("Error mendeteksi kamera:", err);
+                fallbackKameraUtama();
             });
         });
+
+        // Cadangan jika pendeteksian spesifik gagal
+        function fallbackKameraUtama() {
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess
+            ).catch(err => {
+                alert("Tidak dapat mengakses kamera. Pastikan izin kamera di browser sudah diaktifkan.");
+            });
+        }
     </script>
-</body>
-</html>
