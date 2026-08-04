@@ -221,8 +221,14 @@
         });
 
         // Pemicu dari Kamera Scanner
+        // Pemicu dari Kamera Scanner
         function onScanSuccess(decodedText, decodedResult) {
-            prosesKeSheets(decodedText);
+            // 1. Membersihkan spasi di awal/akhir dan menghapus spasi/enter tersembunyi di tengah
+            let teksBersih = decodedText.trim().replace(/\s+/g, '');
+            
+            // 2. Kirim data yang sudah 100% bersih ke Sheets
+            prosesKeSheets(teksBersih);
+        }
         }
 
         // Fungsi Inti Mengirim Data
