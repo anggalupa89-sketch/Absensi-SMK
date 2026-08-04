@@ -165,7 +165,7 @@
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxijFYdibuhL0D8T16511Wvpb_nKaOFaoeokoh-HvQxIZCiCL9d0JAHbzbgsQ9-J1CHxw/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxijFYdibuhL0D8T16511Wvpb_nKaOFaoeokoh-HvQxIZCiCL9d0JAHbzbgsQ9-J1CHxw/exec/exec';
         let isProcessing = false;
 
         function playBeep(type) {
@@ -179,7 +179,7 @@
                 oscillator.type = 'sine';
                 gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
                 oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.1); // Dipercepat durasi beep-nya
+                oscillator.stop(audioCtx.currentTime + 0.1); 
             } catch(e) {}
         }
 
@@ -195,11 +195,17 @@
             if (e.key === 'Enter') kirimManual();
         });
 
-        // SCANNER INSTAN TANPA JEDA WAKTU TUNDA
+        // SCANNER CEPAT DENGAN PEMOTONG 7 DIGIT OTOMATIS
         function onScanSuccess(decodedText, decodedResult) {
-            if (isProcessing) return; // Mencegah scan beruntun dari barcode yang sama dalam 1 detik
+            if (isProcessing) return; 
             
             let teksBersih = decodedText.trim().replace(/\s+/g, '');
+            
+            // Otomatis ambil 7 digit pertama (NIS) jika terbaca barcode gabungan
+            if (teksBersih.length >= 7) {
+                teksBersih = teksBersih.substring(0, 7);
+            }
+
             prosesKeSheets(teksBersih);
         }
 
@@ -240,7 +246,6 @@
                         resultBox.innerText = "❌ " + (pesanRes || result);
                     }
 
-                    // Jeda diperpendek jadi 1.2 detik saja agar langsung siap scan murid berikutnya
                     setTimeout(() => { 
                         resultBox.style.display = "none";
                         isProcessing = false; 
@@ -268,7 +273,6 @@
             listContainer.prepend(div);
         }
 
-        // FPS dinaikkan ke 15 agar kamera lebih agresif mendeteksi barcode secara instan
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
             fps: 15,
             rememberLastUsedCamera: true
