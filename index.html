@@ -56,7 +56,6 @@
         function onScanSuccess(decodedText, decodedResult) {
             if (isProcessing) return;
             isProcessing = true;
-            console.log(`Scan berhasil: ${decodedText}`);
             kirimKeGoogleSheets(decodedText);
         }
 
@@ -74,7 +73,6 @@
 
         function kirimKeGoogleSheets(nisOrData) {
             const resultDiv = document.getElementById('result-container');
-            resultDiv.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800', 'bg-red-100', 'text-red-800');
             resultDiv.className = "p-4 rounded-lg text-center font-medium mb-4 bg-blue-100 text-blue-800";
             resultDiv.innerHTML = "Mengirim data...";
 
@@ -83,8 +81,6 @@
             fetch(targetUrl)
                 .then(response => response.text())
                 .then(resText => {
-                    console.log("Respon dari Sheets:", resText);
-                    
                     if (resText.startsWith("SUKSES")) {
                         resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-green-100 text-green-800";
                         resultDiv.innerHTML = resText.replace("SUKSES|", "BERHASIL: ");
@@ -101,76 +97,34 @@
                     }, 3000);
                 })
                 .catch(err => {
-                    console.error("Fetch Error:", err);
                     resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-red-100 text-red-800";
                     resultDiv.innerHTML = "Gagal terhubung ke server!";
                     isProcessing = false;
                 });
         }
 
-        // Inisialisasi Kamera & Fitur Upload File
+        // Langsung paksa hidupkan kamera belakang tanpa antre deteksi
         document.addEventListener("DOMContentLoaded", function () {
             html5QrCode = new Html5Qrcode("reader");
-
-            // 1. Fitur Scan lewat Upload File Gambar (Sangat aman jika kamera error)
-            const fileInput = document.getElementById('qr-input-file');
-            fileInput.addEventListener('change', e => {
-                if (e.target.files.length == 0) return;
-                const imageFile = e.target.files[0];
-                html5QrCode.scanFile(imageFile, true)
-                    .then(decodedText => {
-                        onScanSuccess(decodedText);
-                    })
-                    .catch(err => {
-                        alert("Gagal membaca barcode dari gambar tersebut. Pastikan foto jelas!");
-                    });
-            });
-
-            // 2. Deteksi Kamera Otomatis
-            Html5Qrcode.getCameras().then(devices => {
-                if (devices && devices.length) {
-                    let containerSelect = document.getElementById('camera-selection-container');
-                    let selectTag = document.getElementById('camera-select');
-                    
-                    if (devices.length > 1) {
-                        containerSelect.classList.remove('hidden');
-                        devices.forEach(device => {
-                            let option = document.createElement('option');
-                            option.value = device.id;
-                            option.text = device.label || `Kamera ${selectTag.length + 1}`;
-                            selectTag.appendChild(option);
-                        });
-
-                        selectTag.addEventListener('change', function() {
-                            let selectedId = this.value;
-                            html5QrCode.stop().then(() => {
-                                mulaiKamera(selectedId);
-                            }).catch(err => console.log(err));
-                        });
-                    }
-
-                    // Pilih kamera belakang pertama atau kamera default
-                    let defaultCamId = devices[devices.length - 1].id;
-                    mulaiKamera(defaultCamId);
-                } else {
-                    document.getElementById('reader').innerHTML = "Tidak ada kamera terdeteksi.<br>Gunakan fitur ketik manual di bawah.";
-                }
-            }).catch(err => {
-                console.error("Izin kamera ditolak / error:", err);
-                document.getElementById('reader').innerHTML = "Akses kamera diblokir browser.<br>Silakan aktifkan izin kamera atau gunakan input manual.";
-            });
-        });
-
-        function mulaiKamera(cameraId) {
+            
+            // Langsung minta izin kamera belakang (environment)
             html5QrCode.start(
-                cameraId,
+                { facingMode: "environment" }, 
                 { fps: 10, qrbox: { width: 250, height: 250 } },
                 onScanSuccess
-            ).catch(err => {
-                console.error("Gagal start kamera:", err);
-                document.getElementById('reader').innerHTML = "Gagal membuka kamera.<br>Silakan gunakan ketik manual.";
+            ).then(() => {
+                // Berhasil menyala, sembunyikan tulisan menyiapkan
+            }).catch(err => {
+                console.error("Gagal kamera:", err);
+                document.getElementById('reader').innerHTML = "Kamera gagal dimuat.<br>Gunakan Upload File atau Ketik Manual di bawah.";
             });
-        }
+
+            // Fitur Upload File
+            document.getElementById('qr-input-file').addEventListener('change', e => {
+                if (e.target.files.length == 0) return;
+                html5QrCode.scanFile(e.target.files[0], true)
+                    .then(decodedText => { onScanSuccess(decodedText); })
+                    .catch(err => { alert("Gagal membaca barcode dari gambar!"); });
+            });
+        });
     </script>
-</body>
-</html>
