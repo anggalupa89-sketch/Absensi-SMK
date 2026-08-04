@@ -3,199 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absensi Modern Anti-Error</title>
-    <!-- Tailwind CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <!-- Library Scanner -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+    <title>Absensi Smart School</title>
+    <!-- Library untuk Scanner QR/Barcode -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        .bg-gradient-purple { background: linear-gradient(135deg, #6b21a8 0%, #4c1d95 100%); }
+        :root {
+            --primary-purple: #6a0dad;
+            --light-purple: #f3e5f5;
+            --accent-purple: #9c27b0;
+        }
+        body {
+            background-color: var(--light-purple);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+        }
+        .header {
+            background-color: var(--primary-purple); 
+            color: white;
+            width: 100%; 
+            text-align: center; 
+            padding: 15px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+        }
+        .container {
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px;
+            margin-top: 20px; 
+            border: 2px solid var(--primary-purple);
+            width: 90%; 
+            max-width: 400px; 
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(106, 13, 173, 0.2);
+        }
+        .radio-group { 
+            margin-bottom: 20px; 
+            background: #ede7f6;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px dashed var(--primary-purple);
+        }
+        .radio-group label { 
+            margin: 0 10px; 
+            font-weight: bold; 
+            color: var(--primary-purple);
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #reader {
+            width: 100%;
+        }
+        #result { 
+            display: none; 
+            margin-top: 15px; 
+            padding: 15px; 
+            border-radius: 5px; 
+            font-weight: bold;
+            font-size: 16px;
+        }
     </style>
 </head>
-<body class="bg-purple-50 min-h-screen text-gray-800 flex flex-col items-center p-4">
+<body>
 
-    <!-- Header -->
-    <div class="max-w-xl w-full bg-gradient-purple text-white rounded-2xl shadow-xl p-6 mb-6 text-center">
-        <h1 class="text-3xl font-extrabold tracking-wide mb-1">ABSENSI SISWA</h1>
-        <p class="text-purple-200 text-sm">Mode Potret (Tanpa Perlu Izin Browser)</p>
+    <div class="header">
+        <h2>Absensi Sekolah Digital</h2>
+        <p>10 PS | 10 TKJ A | 10 TKJ B & Guru</p>
     </div>
 
-    <div class="max-w-xl w-full space-y-6">
+    <div class="container">
+        <h3 style="color: var(--primary-purple); margin-top: 0;">Pilih Status Absen:</h3>
         
-        <!-- Pilihan Status Absen -->
-        <div class="bg-white rounded-2xl shadow-lg p-4">
-            <label class="block text-xs font-bold text-purple-900 uppercase tracking-wider mb-2">Pilih Status:</label>
-            <div class="grid grid-cols-5 gap-2">
-                <button type="button" onclick="setStatus('Auto')" id="btn-Auto" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-600 bg-purple-600 text-white">Auto</button>
-                <button type="button" onclick="setStatus('Datang')" id="btn-Datang" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700">Datang</button>
-                <button type="button" onclick="setStatus('Pulang')" id="btn-Pulang" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700">Pulang</button>
-                <button type="button" onclick="setStatus('Sakit')" id="btn-Sakit" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700">Sakit</button>
-                <button type="button" onclick="setStatus('Izin')" id="btn-Izin" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700">Izin</button>
-            </div>
-        </div>
-
-        <!-- Tombol Kamera Asli Bawaan HP -->
-        <div class="bg-white rounded-2xl shadow-lg p-5 text-center">
-            <h2 class="font-bold text-sm text-purple-900 mb-3 text-left">Scan Barcode:</h2>
+        <!-- Pilihan Datang atau Pulang -->
+        <div class="radio-group">
+            <input type="radio" id="datang" name="status" value="Datang" checked>
+            <label for="datang">🟢 Masuk (Datang)</label>
             
-            <!-- Input rahasia yang langsung memanggil kamera bawaan HP -->
-            <input type="file" id="kamera-asli" accept="image/*" capture="environment" class="hidden">
-            
-            <button onclick="document.getElementById('kamera-asli').click()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-10 px-4 rounded-xl shadow-lg transition flex flex-col items-center justify-center gap-3">
-                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
-                <span class="text-xl">Buka Kamera HP</span>
-                <span class="text-xs text-purple-200 font-normal">Tekan tombol ini, jepret barcode murid, dan data akan terkirim.</span>
-            </button>
-
-            <!-- Status Scanning -->
-            <div id="loading-scan" class="hidden mt-4 text-purple-600 font-bold text-sm animate-pulse">
-                Sedang membaca barcode dari foto...
-            </div>
+            <input type="radio" id="pulang" name="status" value="Pulang">
+            <label for="pulang">🟣 Pulang</label>
         </div>
 
-        <!-- Div rahasia wajib untuk library -->
-        <div id="dummy-reader" style="display:none;"></div>
-
-        <!-- Input Manual -->
-        <div class="bg-white rounded-2xl shadow-lg p-5">
-            <label class="block text-xs font-bold text-purple-900 uppercase mb-2">Atau Ketik NIS Manual:</label>
-            <div class="flex gap-2">
-                <input type="text" id="manual-nis" placeholder="Ketik NIS..." class="flex-1 border-2 border-purple-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-purple-600">
-                <button onclick="prosesManual()" class="bg-purple-600 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-md">Kirim</button>
-            </div>
-        </div>
-
-        <!-- Notifikasi Hasil -->
-        <div id="result-container" class="hidden p-4 rounded-2xl text-center font-bold text-sm shadow-md transition-all duration-300"></div>
-
-        <!-- List Riwayat -->
-        <div class="bg-white rounded-2xl shadow-lg p-5 mb-10">
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="font-bold text-sm text-purple-900 uppercase">Daftar Masuk Hari Ini</h2>
-                <span id="counter-hadir" class="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-full">0 Siswa</span>
-            </div>
-            <div class="overflow-x-auto max-h-60 overflow-y-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-purple-50 text-purple-800 sticky top-0">
-                        <tr>
-                            <th class="p-2">Waktu</th>
-                            <th class="p-2">Data Siswa</th>
-                        </tr>
-                    </thead>
-                    <tbody id="list-absen-body" class="divide-y divide-purple-50">
-                        <tr><td colspan="2" class="text-center text-gray-400 py-4">Belum ada data.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
+        <!-- Area Kamera Scanner -->
+        <div id="reader"></div>
+        
+        <!-- Area Notifikasi Hasil -->
+        <div id="result">Hasil scan akan muncul di sini...</div>
     </div>
 
     <script>
-        // ==========================================
-        // GANTI URL DI BAWAH INI DENGAN WEB APP ANDA
-        // ==========================================
-        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec";
-
-        let currentStatus = "Auto";
+        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec';
+        
         let isProcessing = false;
-        let listSiswaHariIni = [];
-        const html5QrCode = new Html5Qrcode("dummy-reader");
 
-        // Fungsi Ganti Status
-        function setStatus(status) {
-            currentStatus = status;
-            document.querySelectorAll('.status-btn').forEach(btn => {
-                btn.className = "status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700 transition";
-            });
-            document.getElementById(`btn-${status}`).className = "status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-600 bg-purple-600 text-white transition";
+        // Fungsi pembuat suara Beep otomatis (Tanpa file eksternal)
+        function playBeep(type) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                if (type === 'datang') {
+                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Suara beep nada tinggi
+                } else if (type === 'pulang') {
+                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime); // Suara beep nada rendah
+                } else {
+                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime); // Suara error (rendah banget)
+                }
+                
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.15); // Durasi bunyi 0.15 detik
+            } catch(e) {
+                console.log("Audio tidak didukung browser");
+            }
         }
 
-        // =======================================================
-        // SISTEM KAMERA NATIVE (ANTI BLOKIR)
-        // =======================================================
-        document.getElementById('kamera-asli').addEventListener('change', function(e) {
-            if (e.target.files.length == 0) return;
-            if (isProcessing) return;
-
-            const loading = document.getElementById('loading-scan');
-            loading.classList.remove('hidden');
-            const file = e.target.files[0];
-
-            html5QrCode.scanFile(file, true)
-                .then(decodedText => {
-                    loading.classList.add('hidden');
-                    kirimKeGoogleSheets(decodedText);
-                    // Reset input agar bisa jepret foto lagi
-                    e.target.value = ""; 
-                })
-                .catch(err => {
-                    loading.classList.add('hidden');
-                    alert("Barcode tidak terbaca! Pastikan foto barcode jelas, terang, dan tidak goyang.");
-                    e.target.value = ""; 
-                });
-        });
-
-        // =======================================================
-        // INPUT MANUAL & KIRIM KE SHEETS
-        // =======================================================
-        function prosesManual() {
-            const nis = document.getElementById('manual-nis').value.trim();
-            if (!nis) return;
-            if (isProcessing) return;
-            document.getElementById('manual-nis').value = "";
-            kirimKeGoogleSheets(nis);
-        }
-
-        document.getElementById('manual-nis').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') prosesManual();
-        });
-
-        function kirimKeGoogleSheets(nisOrData) {
+        function onScanSuccess(decodedText, decodedResult) {
+            // PROTEKSI ANTI-SCAN BERULANG (Jeda 4 detik agar tidak tidak sengaja scan dobel)
+            if (isProcessing) return; 
             isProcessing = true;
-            const resultDiv = document.getElementById('result-container');
-            resultDiv.className = "p-4 rounded-2xl text-center font-bold text-sm shadow-md bg-purple-100 text-purple-800 block";
-            resultDiv.innerHTML = "Memproses absensi... ⚡";
 
-            let targetUrl = `${URL_APPS_SCRIPT}?dataQR=${encodeURIComponent(nisOrData)}`;
-            if (currentStatus !== "Auto") targetUrl += `&status=${encodeURIComponent(currentStatus)}`;
+            const statusAbsen = document.querySelector('input[name="status"]:checked').value;
+            const resultBox = document.getElementById('result');
+            
+            resultBox.style.display = "block";
+            resultBox.style.backgroundColor = "#d1c4e9";
+            resultBox.style.color = "#311b92";
+            resultBox.innerText = "⏳ Memproses data...";
 
-            fetch(targetUrl)
-                .then(res => res.text())
-                .then(resText => {
-                    let badgeColor = "bg-green-100 text-green-800";
-                    let prefix = "BERHASIL: ";
+            const formData = new URLSearchParams();
+            formData.append('dataQR', decodedText);
+            formData.append('status', statusAbsen);
 
-                    if (resText.startsWith("DOUBLE")) { badgeColor = "bg-yellow-100 text-yellow-800"; prefix = "PERHATIAN: "; } 
-                    else if (resText.startsWith("ERROR")) { badgeColor = "bg-red-100 text-red-800"; prefix = "GAGAL: "; }
+            fetch(scriptURL, { method: 'POST', body: formData})
+                .then(response => response.text())
+                .then(result => {
+                    let responseSplit = result.split("|");
+                    let statusRes = responseSplit[0];
+                    let pesanRes = responseSplit[1];
 
-                    resultDiv.className = `p-4 rounded-2xl text-center font-bold text-sm shadow-md ${badgeColor} block`;
-                    resultDiv.innerHTML = resText.replace("SUKSES|", prefix).replace("DOUBLE|", prefix).replace("ERROR|", prefix);
+                    if (statusRes === "DOUBLE") {
+                        playBeep('error'); // Suara peringatan
+                        resultBox.style.backgroundColor = "#ff9800"; // Oranye
+                        resultBox.style.color = "white";
+                        resultBox.innerText = "⚠️ " + pesanRes;
+                    } else if (statusRes === "SUKSES") {
+                        // Membedakan suara beep berdasarkan jenis absen (Datang / Pulang)
+                        if (statusAbsen === "Datang") {
+                            playBeep('datang');
+                        } else {
+                            playBeep('pulang');
+                        }
 
-                    if (resText.startsWith("SUKSES")) tambahKeListRiwayat(resText);
+                        resultBox.style.backgroundColor = "#4caf50"; // Hijau
+                        resultBox.style.color = "white";
+                        resultBox.innerText = "✅ " + pesanRes;
+                    } else {
+                        playBeep('datang');
+                        resultBox.style.backgroundColor = "#2196f3";
+                        resultBox.style.color = "white";
+                        resultBox.innerText = result;
+                    }
 
-                    setTimeout(() => { resultDiv.classList.add('hidden'); isProcessing = false; }, 2500);
+                    // Jeda waktu 4 detik sebelum kamera bisa scan barcode berikutnya (Mencegah scan tidak sengaja)
+                    setTimeout(() => { 
+                        resultBox.style.display = "none";
+                        isProcessing = false; 
+                    }, 4000);
                 })
-                .catch(err => {
-                    resultDiv.className = "p-4 rounded-2xl text-center font-bold text-sm shadow-md bg-red-100 text-red-800 block";
-                    resultDiv.innerHTML = "Gagal terhubung!";
-                    setTimeout(() => { resultDiv.classList.add('hidden'); isProcessing = false; }, 2500);
+                .catch(error => {
+                    playBeep('error');
+                    resultBox.style.backgroundColor = "#f44336"; // Merah
+                    resultBox.style.color = "white";
+                    resultBox.innerText = "❌ Gagal terhubung ke server!";
+                    
+                    setTimeout(() => { 
+                        resultBox.style.display = "none";
+                        isProcessing = false; 
+                    }, 4000);
                 });
         }
 
-        function tambahKeListRiwayat(responseFromServer) {
-            const waktu = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-            listSiswaHariIni.unshift({ waktu: waktu, pesan: responseFromServer.replace("SUKSES|", "") });
-            
-            const tbody = document.getElementById('list-absen-body');
-            document.getElementById('counter-hadir').innerText = `${listSiswaHariIni.length} Siswa`;
-            
-            let html = "";
-            listSiswaHariIni.forEach(item => {
-                html += `<tr class="border-b border-purple-50"><td class="p-2 font-medium text-purple-900">${item.waktu}</td><td class="p-2 font-bold text-gray-800">${item.pesan}</td></tr>`;
-            });
-            tbody.innerHTML = html;
-        }
+        // Inisialisasi Kamera Scanner
+        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+            fps: 10, 
+            qrbox: {width: 250, height: 250} 
+        }, false);
+        
+        html5QrcodeScanner.render(onScanSuccess);
     </script>
 </body>
 </html>
