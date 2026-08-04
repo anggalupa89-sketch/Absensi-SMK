@@ -176,7 +176,7 @@
     </div>
 
     <script>
-        // PASTIKAN URL INI BENAR
+        // URL WEB APP GOOGLE SCRIPT ANDA
         const scriptURL = 'https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec';
         
         let isProcessing = false;
@@ -209,10 +209,13 @@
 
         // Pemicu Input Manual
         function kirimManual() {
-            const nis = document.getElementById('input-manual').value.trim();
-            if(!nis) { alert("NIS tidak boleh kosong!"); return; }
+            const nis = document.getElementById('input-manual').value;
+            // Bersihkan data manual
+            const nisBersih = nis.trim().replace(/\s+/g, '');
+            
+            if(!nisBersih) { alert("NIS tidak boleh kosong!"); return; }
             document.getElementById('input-manual').value = ""; // kosongkan form
-            prosesKeSheets(nis);
+            prosesKeSheets(nisBersih);
         }
 
         // Event enter untuk input manual
@@ -221,17 +224,13 @@
         });
 
         // Pemicu dari Kamera Scanner
-        // Pemicu dari Kamera Scanner
         function onScanSuccess(decodedText, decodedResult) {
-            // 1. Membersihkan spasi di awal/akhir dan menghapus spasi/enter tersembunyi di tengah
+            // PEMBERSIH OTOMATIS: Buang spasi, spasi di tengah, dan karakter enter yang tersembunyi
             let teksBersih = decodedText.trim().replace(/\s+/g, '');
-            
-            // 2. Kirim data yang sudah 100% bersih ke Sheets
             prosesKeSheets(teksBersih);
         }
-        }
 
-        // Fungsi Inti Mengirim Data
+        // Fungsi Inti Mengirim Data ke Google Sheets
         function prosesKeSheets(dataTeks) {
             if (isProcessing) return; 
             isProcessing = true;
@@ -294,7 +293,7 @@
                 });
         }
 
-        // Fungsi Menambah ke List Bawah
+        // Fungsi Menambah ke List Riwayat Bawah
         function tambahKeRiwayat(pesan, status) {
             const listContainer = document.getElementById('riwayat-list');
             
@@ -313,11 +312,11 @@
                 <div class="history-time">${waktu}</div>
             `;
             
-            // Masukkan ke paling atas
+            // Masukkan ke posisi paling atas
             listContainer.prepend(div);
         }
 
-        // Inisialisasi Kamera Scanner (menggunakan cara yang sudah berhasil dari Anda)
+        // Inisialisasi Kamera Scanner (Cara Asli yang sukses memanggil izin)
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
             fps: 10, 
             qrbox: {width: 250, height: 250} 
