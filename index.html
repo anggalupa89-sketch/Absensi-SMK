@@ -4,25 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Absensi QR Code</title>
-    <!-- Tailwind CSS untuk tampilan rapi dan modern -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <!-- Pustaka Scanner QR -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
 
     <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6">
-        <htext class="text-2xl font-bold text-center text-gray-800 mb-2">Absensi Siswa</htext>
-        <p class="text-sm text-center text-gray-500 mb-6">Arahkan kamera ke QR Code / Barcode siswa</p>
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-2">Absensi Siswa</h1>
+        <p class="text-sm text-center text-gray-500 mb-4">Arahkan kamera atau pilih opsi di bawah</p>
 
         <!-- Area Kamera Scanner -->
-        <div id="reader" class="w-full rounded-lg overflow-hidden border-2 border-dashed border-gray-300 mb-4"></div>
+        <div id="reader" class="w-full rounded-lg overflow-hidden border-2 border-dashed border-gray-300 mb-3 bg-black flex items-center justify-center text-white text-sm" style="min-height: 250px;">
+            Menyiapkan Kamera...
+        </div>
+
+        <!-- Pilihan Kamera (Dropdown jika kamera lebih dari satu) -->
+        <div id="camera-selection-container" class="mb-4 hidden">
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Pilih Kamera:</label>
+            <select id="camera-select" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </select>
+        </div>
 
         <!-- Status Hasil Scan -->
         <div id="result-container" class="hidden p-4 rounded-lg text-center font-medium mb-4"></div>
 
-        <!-- Input Manual (Opsional jika kamera bermasalah) -->
-        <div class="mt-4 pt-4 border-t border-gray-200">
+        <!-- Alternatif: Upload File Gambar Barcode / QR Code dari HP -->
+        <div class="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Atau Upload Gambar Barcode dari Galeri:</label>
+            <input type="file" id="qr-input-file" accept="image/*" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+        </div>
+
+        <!-- Input Manual NIS -->
+        <div class="pt-3 border-t border-gray-200">
             <label class="block text-xs font-semibold text-gray-600 mb-1">Atau Ketik NIS Secara Manual:</label>
             <div class="flex gap-2">
                 <input type="text" id="manual-nis" placeholder="Masukkan NIS..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -95,50 +108,69 @@
                 });
         }
 
-        // Deteksi dan Pilih Kamera secara Pintar
+        // Inisialisasi Kamera & Fitur Upload File
         document.addEventListener("DOMContentLoaded", function () {
             html5QrCode = new Html5Qrcode("reader");
-            
-            // Cari daftar kamera yang tersedia di HP
+
+            // 1. Fitur Scan lewat Upload File Gambar (Sangat aman jika kamera error)
+            const fileInput = document.getElementById('qr-input-file');
+            fileInput.addEventListener('change', e => {
+                if (e.target.files.length == 0) return;
+                const imageFile = e.target.files[0];
+                html5QrCode.scanFile(imageFile, true)
+                    .then(decodedText => {
+                        onScanSuccess(decodedText);
+                    })
+                    .catch(err => {
+                        alert("Gagal membaca barcode dari gambar tersebut. Pastikan foto jelas!");
+                    });
+            });
+
+            // 2. Deteksi Kamera Otomatis
             Html5Qrcode.getCameras().then(devices => {
                 if (devices && devices.length) {
-                    // Cari kamera belakang (biasanya berlabel "back", "rear", atau ambil kamera terakhir/utama)
-                    let selectedCameraId = devices[0].id;
+                    let containerSelect = document.getElementById('camera-selection-container');
+                    let selectTag = document.getElementById('camera-select');
                     
-                    for (let i = 0; i < devices.length; i++) {
-                        let label = devices[i].label.toLowerCase();
-                        if (label.includes("back") || label.includes("rear") || label.includes("belakang") || label.includes("utama")) {
-                            selectedCameraId = devices[i].id;
-                            break;
-                        }
+                    if (devices.length > 1) {
+                        containerSelect.classList.remove('hidden');
+                        devices.forEach(device => {
+                            let option = document.createElement('option');
+                            option.value = device.id;
+                            option.text = device.label || `Kamera ${selectTag.length + 1}`;
+                            selectTag.appendChild(option);
+                        });
+
+                        selectTag.addEventListener('change', function() {
+                            let selectedId = this.value;
+                            html5QrCode.stop().then(() => {
+                                mulaiKamera(selectedId);
+                            }).catch(err => console.log(err));
+                        });
                     }
 
-                    // Mulai scanner menggunakan kamera yang terpilih
-                    html5QrCode.start(
-                        selectedCameraId,
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
-                        onScanSuccess
-                    ).catch(err => {
-                        console.error("Gagal menyalakan kamera pilihan:", err);
-                        fallbackKameraUtama();
-                    });
+                    // Pilih kamera belakang pertama atau kamera default
+                    let defaultCamId = devices[devices.length - 1].id;
+                    mulaiKamera(defaultCamId);
                 } else {
-                    alert("Tidak ada kamera yang terdeteksi di perangkat ini.");
+                    document.getElementById('reader').innerHTML = "Tidak ada kamera terdeteksi.<br>Gunakan fitur ketik manual di bawah.";
                 }
             }).catch(err => {
-                console.error("Error mendeteksi kamera:", err);
-                fallbackKameraUtama();
+                console.error("Izin kamera ditolak / error:", err);
+                document.getElementById('reader').innerHTML = "Akses kamera diblokir browser.<br>Silakan aktifkan izin kamera atau gunakan input manual.";
             });
         });
 
-        // Cadangan jika pendeteksian spesifik gagal
-        function fallbackKameraUtama() {
+        function mulaiKamera(cameraId) {
             html5QrCode.start(
-                { facingMode: "environment" },
+                cameraId,
                 { fps: 10, qrbox: { width: 250, height: 250 } },
                 onScanSuccess
             ).catch(err => {
-                alert("Tidak dapat mengakses kamera. Pastikan izin kamera di browser sudah diaktifkan.");
+                console.error("Gagal start kamera:", err);
+                document.getElementById('reader').innerHTML = "Gagal membuka kamera.<br>Silakan gunakan ketik manual.";
             });
         }
     </script>
+</body>
+</html>
