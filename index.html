@@ -3,230 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Attendance | Ultra Fast Scanner</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-gradient: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
-            --primary: #6366f1;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --card-bg: #ffffff;
-            --radius: 16px;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 15px; }
-        .header { text-align: center; margin-bottom: 15px; }
-        .header h1 { font-size: 22px; font-weight: 700; color: #312e81; }
-        .header p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-        .main-card { background: var(--card-bg); width: 100%; max-width: 420px; border-radius: var(--radius); box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1); padding: 20px; border: 1px solid rgba(226, 232, 240, 0.8); }
-        .mode-indicator { background: #e0e7ff; color: #3730a3; font-weight: 600; font-size: 12px; padding: 8px; border-radius: 8px; margin-bottom: 12px; text-align: center; }
-        #reader { width: 100% !important; border-radius: 12px !important; overflow: hidden; border: none !important; }
-        #reader video { border-radius: 12px; }
-        .manual-section { margin-top: 15px; border-top: 1px dashed #cbd5e1; padding-top: 12px; }
-        .manual-title { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
-        .manual-form { display: flex; flex-direction: column; gap: 8px; }
-        .manual-form input, .manual-form select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; }
-        .btn-submit { background: var(--primary); color: white; border: none; padding: 9px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .btn-submit:hover { background: #4f46e5; }
-        #result { display: none; margin-top: 12px; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 13px; text-align: center; }
-        .recent-section { margin-top: 15px; width: 100%; max-width: 420px; }
-        .recent-header { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .recent-list { display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto; }
-        .recent-item { background: rgba(255, 255, 255, 0.8); border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
-        .recent-name { font-weight: 600; }
-        .recent-badge { font-size: 10px; padding: 2px 6px; border-radius: 20px; font-weight: 600; }
-        .badge-datang { background: #d1fae5; color: #065f46; }
-        .badge-telat { background: #fee2e2; color: #991b1b; }
-        .badge-pulang { background: #ede9fe; color: #5b21b6; }
-        .badge-sakit { background: #fef3c7; color: #92400e; }
-        .badge-izin { background: #e0f2fe; color: #0369a1; }
-    </style>
+    <title>Aplikasi Absensi QR Code</title>
+    <!-- Tailwind CSS untuk tampilan rapi dan modern -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Pustaka Scanner QR -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="header">
-        <h1>Absensi SMK Ekuintek</h1>
-        <p>Batas Masuk: 06.45 | Auto-Detect & Ultra-Fast Scan</p>
-    </div>
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6">
+        <htext class="text-2xl font-bold text-center text-gray-800 mb-2">Absensi Siswa</htext>
+        <p class="text-sm text-center text-gray-500 mb-6">Arahkan kamera ke QR Code / Barcode siswa</p>
 
-    <div class="main-card">
-        <div class="mode-indicator">
-            ⚡ Mode Cepat Aktif (< 1 Detik)
-        </div>
+        <!-- Area Kamera Scanner -->
+        <div id="reader" class="w-full rounded-lg overflow-hidden border-2 border-dashed border-gray-300 mb-4"></div>
 
-        <div id="reader"></div>
+        <!-- Status Hasil Scan -->
+        <div id="result-container" class="hidden p-4 rounded-lg text-center font-medium mb-4"></div>
 
-        <div class="manual-section">
-            <div class="manual-title">Input Manual Piket</div>
-            <div class="manual-form">
-                <input type="text" id="manualInput" placeholder="Ketik Nama atau NIS Siswa...">
-                <select id="manualStatus">
-                    <option value="Sakit">Sakit</option>
-                    <option value="Izin">Izin</option>
-                    <option value="Datang">Manual Masuk</option>
-                    <option value="Pulang">Manual Pulang</option>
-                </select>
-                <button class="btn-submit" onclick="submitManual()">Simpan Manual</button>
+        <!-- Input Manual (Opsional jika kamera bermasalah) -->
+        <div class="mt-4 pt-4 border-t border-gray-200">
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Atau Ketik NIS Secara Manual:</label>
+            <div class="flex gap-2">
+                <input type="text" id="manual-nis" placeholder="Masukkan NIS..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="kirimManual()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">Kirim</button>
             </div>
-        </div>
-        
-        <div id="result"></div>
-    </div>
-
-    <div class="recent-section">
-        <div class="recent-header">
-            <span>Aktivitas Hari Ini</span>
-            <span id="scanCount" style="font-size: 10px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">0</span>
-        </div>
-        <div class="recent-list" id="recentList">
-            <div style="text-align: center; color: var(--text-muted); font-size: 11px; padding: 10px;">Belum ada aktivitas</div>
         </div>
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec';
+        // ==========================================
+        // GANTI URL DI BAWAH INI DENGAN URL WEB APP TERBARU ANDA
+        // ==========================================
+        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec";
+
         let isProcessing = false;
-        let audioCtx = null;
-        let recentScans = [];
 
-        document.body.addEventListener('click', () => {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }, { once: true });
-
-        function playBeep(type) {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                if (type === 'success') osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-                else if (type === 'telat') osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-                else osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-                
-                osc.type = 'sine';
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.08);
-            } catch(e) {}
-        }
-
-        function addRecentScan(name, status, time) {
-            recentScans.unshift({ name, status, time });
-            if(recentScans.length > 5) recentScans.pop();
-
-            const listEl = document.getElementById('recentList');
-            document.getElementById('scanCount').innerText = recentScans.length;
-            
-            listEl.innerHTML = '';
-            recentScans.forEach(item => {
-                let badgeClass = 'badge-datang';
-                if(item.status === 'Telat') badgeClass = 'badge-telat';
-                else if(item.status === 'Pulang') badgeClass = 'badge-pulang';
-                else if(item.status === 'Sakit') badgeClass = 'badge-sakit';
-                else if(item.status === 'Izin') badgeClass = 'badge-izin';
-
-                listEl.innerHTML += `
-                    <div class="recent-item">
-                        <span class="recent-name">${item.name}</span>
-                        <div>
-                            <span class="recent-badge ${badgeClass}">${item.status}</span>
-                            <span style="font-size: 10px; color: var(--text-muted); margin-left: 4px;">${item.time}</span>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function processAbsen(keyword, statusKustom = null) {
-            if (isProcessing) return;
+        function onScanSuccess(decodedText, decodedResult) {
+            if (isProcessing) return; // Mencegah scan beruntun dalam waktu bersamaan
             isProcessing = true;
 
-            const resultBox = document.getElementById('result');
-            resultBox.style.display = "block";
-            resultBox.style.backgroundColor = "#e0e7ff";
-            resultBox.style.color = "#3730a3";
-            resultBox.innerText = "⏳ Memproses...";
+            console.log(`Scan berhasil: ${decodedText}`);
+            kirimKeGoogleSheets(decodedText);
+        }
 
-            const formData = new URLSearchParams();
-            formData.append('dataQR', keyword);
-            if (statusKustom) formData.append('status', statusKustom);
+        function kirimManual() {
+            const inputVal = document.getElementById('manual-nis').value.trim();
+            if (!inputVal) {
+                alert("NIS tidak boleh kosong!");
+                return;
+            }
+            if (isProcessing) return;
+            isProcessing = true;
+            document.getElementById('manual-nis').value = "";
+            kirimKeGoogleSheets(inputVal);
+        }
 
-            fetch(scriptURL, { method: 'POST', body: formData})
+        function kirimKeGoogleSheets(nisOrData) {
+            const resultDiv = document.getElementById('result-container');
+            resultDiv.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800', 'bg-red-100', 'text-red-800');
+            resultDiv.className = "p-4 rounded-lg text-center font-medium mb-4 bg-blue-100 text-blue-800";
+            resultDiv.innerHTML = "Mengirim data...";
+
+            // Mengirim data menggunakan parameter ?dataQR= agar pasti tertangkap oleh Apps Script
+            const targetUrl = `${URL_APPS_SCRIPT}?dataQR=${encodeURIComponent(nisOrData)}`;
+
+            fetch(targetUrl)
                 .then(response => response.text())
-                .then(result => {
-                    let partsRes = result.split("|");
-                    let statusRes = partsRes[0];
-                    let pesanRes = partsRes[1];
-                    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                    if (statusRes === "DOUBLE") {
-                        playBeep('error');
-                        resultBox.style.backgroundColor = "#fef3c7";
-                        resultBox.style.color = "#92400e";
-                        resultBox.innerText = "⚠️ " + pesanRes;
-                    } else if (statusRes === "SUKSES") {
-                        let displayedStatus = statusKustom ? statusKustom : (pesanRes.startsWith("Telat") ? "Telat" : (pesanRes.startsWith("Datang") ? "Datang" : "Pulang"));
-                        
-                        if (displayedStatus === "Telat") playBeep('telat');
-                        else playBeep('success');
-
-                        resultBox.style.backgroundColor = displayedStatus === "Telat" ? "#fee2e2" : "#d1fae5";
-                        resultBox.style.color = displayedStatus === "Telat" ? "#991b1b" : "#065f46";
-                        resultBox.innerText = "✅ " + pesanRes;
-
-                        let studentName = pesanRes.includes(":") ? pesanRes.split(":")[1].trim() : keyword;
-                        addRecentScan(studentName, displayedStatus, currentTime);
-                        document.getElementById('manualInput').value = '';
+                .then(resText => {
+                    console.log("Respon dari Sheets:", resText);
+                    
+                    if (resText.startsWith("SUKSES")) {
+                        resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-green-100 text-green-800";
+                        resultDiv.innerHTML = resText.replace("SUKSES|", "BERHASIL: ");
+                    } else if (resText.startsWith("DOUBLE")) {
+                        resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-yellow-100 text-yellow-800";
+                        resultDiv.innerHTML = resText.replace("DOUBLE|", "PERHATIAN: ");
                     } else {
-                        playBeep('error');
-                        resultBox.style.backgroundColor = "#fee2e2";
-                        resultBox.style.color = "#991b1b";
-                        resultBox.innerText = result;
+                        resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-red-100 text-red-800";
+                        resultDiv.innerHTML = resText.replace("ERROR|", "GAGAL: ");
                     }
 
-                    // DIKEBUT: Jeda dipangkas jadi 900 milidetik (0.9 detik) agar super kilat!
-                    setTimeout(() => { 
-                        resultBox.style.display = "none";
-                        isProcessing = false; 
-                    }, 900);
+                    // Reset status jeda setelah 3 detik agar bisa scan siswa berikutnya
+                    setTimeout(() => {
+                        isProcessing = false;
+                    }, 3000);
                 })
-                .catch(error => {
-                    playBeep('error');
-                    resultBox.style.backgroundColor = "#fee2e2";
-                    resultBox.style.color = "#991b1b";
-                    resultBox.innerText = "❌ Gangguan koneksi!";
-                    setTimeout(() => { 
-                        resultBox.style.display = "none";
-                        isProcessing = false; 
-                    }, 900);
+                .catch(err => {
+                    console.error("Fetch Error:", err);
+                    resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-red-100 text-red-800";
+                    resultDiv.innerHTML = "Gagal terhubung ke server!";
+                    isProcessing = false;
                 });
         }
 
-        function onScanSuccess(decodedText) {
-            processAbsen(decodedText, null);
-        }
+        // Inisialisasi Kamera Scanner
+        document.addEventListener("DOMContentLoaded", function () {
+            const html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
-        function submitManual() {
-            const keyword = document.getElementById('manualInput').value.trim();
-            const status = document.getElementById('manualStatus').value;
-            if (!keyword) {
-                alert("Ketik Nama atau NIS terlebih dahulu!");
-                return;
-            }
-            processAbsen(keyword, status);
-        }
-
-        // DIOPTIMASI: FPS 30 agar pembacaan barcode instan < 1 detik
-        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-            fps: 30, 
-            qrbox: {width: 200, height: 200} 
-        }, false);
-        
-        html5QrcodeScanner.render(onScanSuccess);
+            html5QrCode.start(
+                { facingMode: "environment" }, // Menggunakan kamera belakang HP
+                config,
+                onScanSuccess
+            ).catch(err => {
+                console.error("Gagal membuka kamera:", err);
+                alert("Tidak dapat mengakses kamera. Pastikan izin kamera di browser sudah diaktifkan.");
+            });
+        });
     </script>
 </body>
 </html>
