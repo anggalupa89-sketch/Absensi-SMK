@@ -210,22 +210,22 @@
         // Pemicu Input Manual
         function kirimManual() {
             const nis = document.getElementById('input-manual').value;
-            // Bersihkan data manual
             const nisBersih = nis.trim().replace(/\s+/g, '');
             
             if(!nisBersih) { alert("NIS tidak boleh kosong!"); return; }
-            document.getElementById('input-manual').value = ""; // kosongkan form
+            document.getElementById('input-manual').value = ""; 
             prosesKeSheets(nisBersih);
         }
 
-        // Event enter untuk input manual
         document.getElementById('input-manual').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') kirimManual();
         });
 
-        // Pemicu dari Kamera Scanner
+        // Pemicu dari Kamera Scanner (DILENGKAPI DETEKTIF BARCODE)
         function onScanSuccess(decodedText, decodedResult) {
-            // PEMBERSIH OTOMATIS: Buang spasi, spasi di tengah, dan karakter enter yang tersembunyi
+            // MUNCULKAN KOTAK PESAN UNTUK MELIHAT ISI ASLI BARCODE
+            alert("Scanner mendeteksi teks ini:\n👉 [" + decodedText + "] 👈\n\nBandingkan dengan NIS di Master Data Anda!");
+
             let teksBersih = decodedText.trim().replace(/\s+/g, '');
             prosesKeSheets(teksBersih);
         }
@@ -252,7 +252,7 @@
                 .then(result => {
                     let responseSplit = result.split("|");
                     let statusRes = responseSplit[0];
-                    let pesanRes = responseSplit[1] || result; // Fallback jika format salah
+                    let pesanRes = responseSplit[1] || result; 
 
                     if (statusRes === "DOUBLE") {
                         playBeep('error'); 
@@ -297,14 +297,12 @@
         function tambahKeRiwayat(pesan, status) {
             const listContainer = document.getElementById('riwayat-list');
             
-            // Hapus tulisan "Belum ada data" jika ada
             if(listContainer.innerHTML.includes("Belum ada data")) {
                 listContainer.innerHTML = "";
             }
 
             const waktu = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
             
-            // Buat elemen baru
             const div = document.createElement('div');
             div.className = 'history-item';
             div.innerHTML = `
@@ -312,11 +310,10 @@
                 <div class="history-time">${waktu}</div>
             `;
             
-            // Masukkan ke posisi paling atas
             listContainer.prepend(div);
         }
 
-        // Inisialisasi Kamera Scanner (Cara Asli yang sukses memanggil izin)
+        // Inisialisasi Kamera Scanner
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
             fps: 10, 
             qrbox: {width: 250, height: 250} 
