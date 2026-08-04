@@ -13,18 +13,29 @@
 
     <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6">
         <h1 class="text-2xl font-bold text-center text-gray-800 mb-2">Absensi Siswa</h1>
-        <p class="text-sm text-center text-gray-500 mb-4">Tekan tombol di bawah untuk menyalakan kamera</p>
+        <p class="text-sm text-center text-gray-500 mb-4">HP dengan banyak lensa kamera? Pilih manual di bawah.</p>
 
-        <!-- Tombol Interaktif untuk Meminta Izin Kamera -->
-        <div id="button-container" class="mb-4">
-            <button onclick="mulaiKamera()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
-                Buka / Izinkan Kamera
+        <!-- Tombol 1: Minta Izin & Cari Daftar Kamera -->
+        <div id="init-container" class="mb-4">
+            <button onclick="cariKamera()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition text-sm">
+                1. Beri Izin & Cari Kamera
+            </button>
+        </div>
+
+        <!-- Tombol 2: Pilih Lensa (Muncuk Setelah Tombol 1 Ditekan) -->
+        <div id="camera-selection-container" class="mb-4 hidden p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <label class="block text-xs font-semibold text-blue-800 mb-1">Daftar Lensa Kamera Terdeteksi:</label>
+            <select id="camera-select" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
+            </select>
+            <button onclick="mulaiKameraPilihan()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition text-sm">
+                2. Nyalakan Kamera Terpilih
             </button>
         </div>
 
         <!-- Area Kamera Scanner -->
-        <div id="reader" class="w-full rounded-lg overflow-hidden border-2 border-dashed border-gray-300 mb-4 bg-black" style="min-height: 250px;"></div>
+        <div id="reader" class="w-full rounded-lg overflow-hidden border-2 border-dashed border-gray-300 mb-4 bg-black flex items-center justify-center text-gray-400 text-sm" style="min-height: 250px;">
+            Kamera belum aktif
+        </div>
 
         <!-- Status Hasil Scan -->
         <div id="result-container" class="hidden p-4 rounded-lg text-center font-medium mb-4"></div>
@@ -51,35 +62,70 @@
         function onScanSuccess(decodedText, decodedResult) {
             if (isProcessing) return;
             isProcessing = true;
-
             console.log(`Scan berhasil: ${decodedText}`);
             kirimKeGoogleSheets(decodedText);
         }
 
-        // Fungsi yang dipicu saat tombol "Buka / Izinkan Kamera" diketuk
-        function mulaiKamera() {
-            const btnContainer = document.getElementById('button-container');
-            
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            }
+        // Langkah 1: Memaksa browser meminta izin dan mencari daftar lensa
+        function cariKamera() {
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    document.getElementById('init-container').classList.add('hidden');
+                    const selectionContainer = document.getElementById('camera-selection-container');
+                    selectionContainer.classList.remove('hidden');
+                    
+                    const select = document.getElementById('camera-select');
+                    select.innerHTML = ""; 
+                    
+                    // Masukkan semua lensa yang ada di HP ke dalam pilihan dropdown
+                    devices.forEach((device, index) => {
+                        let option = document.createElement('option');
+                        option.value = device.id;
+                        option.text = device.label || `Lensa Kamera ${index + 1}`;
+                        select.appendChild(option);
+                    });
+                    
+                    // Pilih lensa terakhir sebagai default (biasanya lensa utama belakang di Android)
+                    select.selectedIndex = devices.length - 1;
 
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-            // Perintah ini akan memaksa browser memunculkan pop-up izin kamera
-            html5QrCode.start(
-                { facingMode: "environment" },
-                config,
-                onScanSuccess
-            ).then(() => {
-                // Sembunyikan tombol jika kamera berhasil menyala
-                btnContainer.classList.add('hidden');
+                } else {
+                    alert("Tidak ada kamera yang terdeteksi di perangkat ini.");
+                }
             }).catch(err => {
-                console.error("Gagal membuka kamera:", err);
-                alert("Gagal mengakses kamera. Pastikan Anda menekan 'Izinkan' pada pop-up browser atau periksa pengaturan izin situs.");
+                console.error("Gagal mendapat daftar kamera:", err);
+                alert("Browser memblokir kamera. Silakan cek ikon Gembok di atas dan Izinkan kamera!");
             });
         }
 
+        // Langkah 2: Mulai kamera menggunakan ID Lensa yang dipilih di dropdown
+        function mulaiKameraPilihan() {
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            } else if (html5QrCode.isScanning) {
+                // Jika sedang nyala lalu mau ganti lensa, matikan dulu
+                html5QrCode.stop().then(() => jalankanScanner()).catch(console.error);
+                return;
+            }
+            jalankanScanner();
+        }
+
+        function jalankanScanner() {
+            const cameraId = document.getElementById('camera-select').value;
+            const config = { fps: 15, qrbox: { width: 250, height: 250 } };
+
+            html5QrCode.start(
+                cameraId, // Tembak langsung ID spesifik lensanya
+                config,
+                onScanSuccess
+            ).then(() => {
+                document.getElementById('reader').innerHTML = ""; 
+            }).catch(err => {
+                console.error("Gagal membuka kamera:", err);
+                alert("Gagal membuka lensa ini (Mungkin lensa sensor). Silakan pilih lensa lain di daftar!");
+            });
+        }
+
+        // Fungsi kirim data
         function kirimManual() {
             const inputVal = document.getElementById('manual-nis').value.trim();
             if (!inputVal) {
@@ -103,8 +149,6 @@
             fetch(targetUrl)
                 .then(response => response.text())
                 .then(resText => {
-                    console.log("Respon dari Sheets:", resText);
-                    
                     if (resText.startsWith("SUKSES")) {
                         resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-green-100 text-green-800";
                         resultDiv.innerHTML = resText.replace("SUKSES|", "BERHASIL: ");
@@ -115,13 +159,9 @@
                         resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-red-100 text-red-800";
                         resultDiv.innerHTML = resText.replace("ERROR|", "GAGAL: ");
                     }
-
-                    setTimeout(() => {
-                        isProcessing = false;
-                    }, 3000);
+                    setTimeout(() => { isProcessing = false; }, 2500);
                 })
                 .catch(err => {
-                    console.error("Fetch Error:", err);
                     resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-red-100 text-red-800";
                     resultDiv.innerHTML = "Gagal terhubung ke server!";
                     isProcessing = false;
