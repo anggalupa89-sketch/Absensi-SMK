@@ -3,21 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absensi Modern</title>
+    <title>Absensi Modern Anti-Error</title>
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Library Scanner -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
     <style>
         .bg-gradient-purple { background: linear-gradient(135deg, #6b21a8 0%, #4c1d95 100%); }
-        /* Mempercantik tombol bawaan dari library scanner */
-        #reader button {
-            background-color: #6b21a8; color: white; padding: 8px 16px; border-radius: 8px; margin-top: 10px; border: none; font-weight: bold; cursor: pointer;
-        }
-        #reader select {
-            padding: 8px; border-radius: 8px; border: 1px solid #d8b4fe; margin-bottom: 10px; width: 100%;
-        }
-        #reader { border: none !important; }
     </style>
 </head>
 <body class="bg-purple-50 min-h-screen text-gray-800 flex flex-col items-center p-4">
@@ -25,14 +17,14 @@
     <!-- Header -->
     <div class="max-w-xl w-full bg-gradient-purple text-white rounded-2xl shadow-xl p-6 mb-6 text-center">
         <h1 class="text-3xl font-extrabold tracking-wide mb-1">ABSENSI SISWA</h1>
-        <p class="text-purple-200 text-sm">Sistem Cepat & Anti-Error</p>
+        <p class="text-purple-200 text-sm">Mode Potret (Tanpa Perlu Izin Browser)</p>
     </div>
 
     <div class="max-w-xl w-full space-y-6">
         
         <!-- Pilihan Status Absen -->
         <div class="bg-white rounded-2xl shadow-lg p-4">
-            <label class="block text-xs font-bold text-purple-900 uppercase tracking-wider mb-2">Status Absen:</label>
+            <label class="block text-xs font-bold text-purple-900 uppercase tracking-wider mb-2">Pilih Status:</label>
             <div class="grid grid-cols-5 gap-2">
                 <button type="button" onclick="setStatus('Auto')" id="btn-Auto" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-600 bg-purple-600 text-white">Auto</button>
                 <button type="button" onclick="setStatus('Datang')" id="btn-Datang" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700">Datang</button>
@@ -42,20 +34,31 @@
             </div>
         </div>
 
-        <!-- ENGINE SCANNER ASLI BAWAAN LIBRARY (Pasti Jalan) -->
-        <div class="bg-white rounded-2xl shadow-lg p-5">
-            <h2 class="font-bold text-sm text-purple-900 mb-3 flex justify-between">
-                <span>Kamera Scanner</span>
-                <span id="scan-status-badge" class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">Mode: Auto</span>
-            </h2>
+        <!-- Tombol Kamera Asli Bawaan HP -->
+        <div class="bg-white rounded-2xl shadow-lg p-5 text-center">
+            <h2 class="font-bold text-sm text-purple-900 mb-3 text-left">Scan Barcode:</h2>
             
-            <!-- Tempat Scanner Bawaan akan dimunculkan -->
-            <div id="reader" class="w-full rounded-xl overflow-hidden border-2 border-purple-100 bg-gray-50 p-2"></div>
+            <!-- Input rahasia yang langsung memanggil kamera bawaan HP -->
+            <input type="file" id="kamera-asli" accept="image/*" capture="environment" class="hidden">
+            
+            <button onclick="document.getElementById('kamera-asli').click()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-10 px-4 rounded-xl shadow-lg transition flex flex-col items-center justify-center gap-3">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                <span class="text-xl">Buka Kamera HP</span>
+                <span class="text-xs text-purple-200 font-normal">Tekan tombol ini, jepret barcode murid, dan data akan terkirim.</span>
+            </button>
+
+            <!-- Status Scanning -->
+            <div id="loading-scan" class="hidden mt-4 text-purple-600 font-bold text-sm animate-pulse">
+                Sedang membaca barcode dari foto...
+            </div>
         </div>
+
+        <!-- Div rahasia wajib untuk library -->
+        <div id="dummy-reader" style="display:none;"></div>
 
         <!-- Input Manual -->
         <div class="bg-white rounded-2xl shadow-lg p-5">
-            <label class="block text-xs font-bold text-purple-900 uppercase mb-2">Ketik NIS Manual:</label>
+            <label class="block text-xs font-bold text-purple-900 uppercase mb-2">Atau Ketik NIS Manual:</label>
             <div class="flex gap-2">
                 <input type="text" id="manual-nis" placeholder="Ketik NIS..." class="flex-1 border-2 border-purple-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-purple-600">
                 <button onclick="prosesManual()" class="bg-purple-600 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-md">Kirim</button>
@@ -90,13 +93,14 @@
 
     <script>
         // ==========================================
-        // GANTI URL DI BAWAH INI
+        // GANTI URL DI BAWAH INI DENGAN WEB APP ANDA
         // ==========================================
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec";
 
         let currentStatus = "Auto";
         let isProcessing = false;
         let listSiswaHariIni = [];
+        const html5QrCode = new Html5Qrcode("dummy-reader");
 
         // Fungsi Ganti Status
         function setStatus(status) {
@@ -105,41 +109,40 @@
                 btn.className = "status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700 transition";
             });
             document.getElementById(`btn-${status}`).className = "status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-600 bg-purple-600 text-white transition";
-            document.getElementById('scan-status-badge').innerText = `Mode: ${status}`;
         }
 
-        // Fungsi yang dipanggil saat scanner berhasil membaca
-        function onScanSuccess(decodedText, decodedResult) {
+        // =======================================================
+        // SISTEM KAMERA NATIVE (ANTI BLOKIR)
+        // =======================================================
+        document.getElementById('kamera-asli').addEventListener('change', function(e) {
+            if (e.target.files.length == 0) return;
             if (isProcessing) return;
-            isProcessing = true;
-            kirimKeGoogleSheets(decodedText);
-        }
 
-        // =======================================================
-        // INISIALISASI SCANNER BAWAAN LIBRARY (ANTI-MACET)
-        // =======================================================
-        document.addEventListener("DOMContentLoaded", function () {
-            // Menggunakan Html5QrcodeScanner (Sistem Otomatis dari pembuatnya)
-            let html5QrcodeScanner = new Html5QrcodeScanner(
-                "reader",
-                { 
-                    fps: 10, 
-                    qrbox: {width: 250, height: 250},
-                    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA, Html5QrcodeScanType.SCAN_TYPE_FILE]
-                },
-                false
-            );
-            
-            // Render UI bawaannya
-            html5QrcodeScanner.render(onScanSuccess);
+            const loading = document.getElementById('loading-scan');
+            loading.classList.remove('hidden');
+            const file = e.target.files[0];
+
+            html5QrCode.scanFile(file, true)
+                .then(decodedText => {
+                    loading.classList.add('hidden');
+                    kirimKeGoogleSheets(decodedText);
+                    // Reset input agar bisa jepret foto lagi
+                    e.target.value = ""; 
+                })
+                .catch(err => {
+                    loading.classList.add('hidden');
+                    alert("Barcode tidak terbaca! Pastikan foto barcode jelas, terang, dan tidak goyang.");
+                    e.target.value = ""; 
+                });
         });
-        // =======================================================
 
+        // =======================================================
+        // INPUT MANUAL & KIRIM KE SHEETS
+        // =======================================================
         function prosesManual() {
             const nis = document.getElementById('manual-nis').value.trim();
             if (!nis) return;
             if (isProcessing) return;
-            isProcessing = true;
             document.getElementById('manual-nis').value = "";
             kirimKeGoogleSheets(nis);
         }
@@ -149,6 +152,7 @@
         });
 
         function kirimKeGoogleSheets(nisOrData) {
+            isProcessing = true;
             const resultDiv = document.getElementById('result-container');
             resultDiv.className = "p-4 rounded-2xl text-center font-bold text-sm shadow-md bg-purple-100 text-purple-800 block";
             resultDiv.innerHTML = "Memproses absensi... ⚡";
@@ -170,12 +174,12 @@
 
                     if (resText.startsWith("SUKSES")) tambahKeListRiwayat(resText);
 
-                    setTimeout(() => { resultDiv.classList.add('hidden'); isProcessing = false; }, 2000);
+                    setTimeout(() => { resultDiv.classList.add('hidden'); isProcessing = false; }, 2500);
                 })
                 .catch(err => {
                     resultDiv.className = "p-4 rounded-2xl text-center font-bold text-sm shadow-md bg-red-100 text-red-800 block";
                     resultDiv.innerHTML = "Gagal terhubung!";
-                    setTimeout(() => { resultDiv.classList.add('hidden'); isProcessing = false; }, 2000);
+                    setTimeout(() => { resultDiv.classList.add('hidden'); isProcessing = false; }, 2500);
                 });
         }
 
