@@ -13,10 +13,18 @@
 
     <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6">
         <h1 class="text-2xl font-bold text-center text-gray-800 mb-2">Absensi Siswa</h1>
-        <p class="text-sm text-center text-gray-500 mb-6">Arahkan kamera ke QR Code / Barcode siswa</p>
+        <p class="text-sm text-center text-gray-500 mb-4">Arahkan kamera ke QR Code / Barcode siswa</p>
+
+        <!-- Tombol Pemicu Izin Kamera (Muncul jika kamera belum aktif) -->
+        <div id="camera-permission-container" class="mb-4 text-center">
+            <button onclick="mulaiKamera()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md transition text-sm flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                Aktifkan & Izinkan Kamera
+            </button>
+        </div>
 
         <!-- Area Kamera Scanner -->
-        <div id="reader" class="w-full rounded-lg overflow-hidden border-2 border-dashed border-gray-300 mb-4"></div>
+        <div id="reader" class="w-full rounded-lg overflow-hidden border-2 border-dashed border-gray-300 mb-4 bg-black" style="min-height: 250px;"></div>
 
         <!-- Status Hasil Scan -->
         <div id="result-container" class="hidden p-4 rounded-lg text-center font-medium mb-4"></div>
@@ -38,6 +46,7 @@
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec";
 
         let isProcessing = false;
+        let html5QrCode = null;
 
         function onScanSuccess(decodedText, decodedResult) {
             if (isProcessing) return;
@@ -45,6 +54,29 @@
 
             console.log(`Scan berhasil: ${decodedText}`);
             kirimKeGoogleSheets(decodedText);
+        }
+
+        function mulaiKamera() {
+            const btnContainer = document.getElementById('camera-permission-container');
+            
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            }
+
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            // Perintah ini secara otomatis akan memunculkan pop-up izin browser
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess
+            ).then(() => {
+                // Sembunyikan tombol jika kamera berhasil menyala
+                btnContainer.classList.add('hidden');
+            }).catch(err => {
+                console.error("Gagal membuka kamera:", err);
+                alert("Tidak dapat mengakses kamera. Pastikan Anda menekan tombol 'Izinkan' pada pop-up browser.");
+            });
         }
 
         function kirimManual() {
@@ -94,21 +126,6 @@
                     isProcessing = false;
                 });
         }
-
-        // Inisialisasi Kamera Scanner
-        document.addEventListener("DOMContentLoaded", function () {
-            const html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-            html5QrCode.start(
-                { facingMode: "environment" },
-                config,
-                onScanSuccess
-            ).catch(err => {
-                console.error("Gagal membuka kamera:", err);
-                alert("Tidak dapat mengakses kamera. Pastikan izin kamera di browser sudah diaktifkan.");
-            });
-        });
     </script>
 </body>
 </html>
