@@ -3,56 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absensi Smart School</title>
+    <title>Absensi Smart School - SMK Ekuintek</title>
     <!-- Library untuk Scanner QR/Barcode -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root {
-            --primary-purple: #6a0dad;
-            --light-purple: #f3e5f5;
-            --accent-purple: #9c27b0;
-            --success: #4caf50;
-            --warning: #ff9800;
-            --danger: #f44336;
+            --primary-gradient: linear-gradient(135deg, #4a0e4e, #6a0dad, #9c27b0);
+            --card-gradient: linear-gradient(135deg, #ffffff, #fcf8ff);
+            --success: #2e7d32;
+            --warning: #ed6c02;
+            --danger: #d32f2f;
         }
         body {
-            background-color: var(--light-purple);
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0; 
             display: flex; 
             flex-direction: column; 
             align-items: center;
-            padding-bottom: 30px;
+            min-height: 100vh;
+            padding-bottom: 40px;
         }
         .header {
-            background-color: var(--primary-purple); 
+            background: var(--primary-gradient);
             color: white;
             width: 100%; 
             text-align: center; 
-            padding: 12px 0;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
+            padding: 20px 0;
+            box-shadow: 0 4px 15px rgba(106, 13, 173, 0.3);
+            margin-bottom: 20px;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
         }
-        .header p { margin: 3px 0 0 0; font-size: 13px; }
+        .header img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 50%;
+            padding: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .header h2 { margin: 0; font-size: 22px; letter-spacing: 0.5px; }
+        .header p { margin: 5px 0 0 0; font-size: 13px; font-style: italic; opacity: 0.9; }
+        
+        /* Jam Realtime Digital */
+        .clock-box {
+            background: rgba(255, 255, 255, 0.2);
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+            letter-spacing: 1px;
+            backdrop-filter: blur(5px);
+        }
         
         .container {
-            background: white; 
-            padding: 15px; 
-            border-radius: 10px;
-            border: 2px solid var(--primary-purple);
+            background: var(--card-gradient); 
+            padding: 20px; 
+            border-radius: 15px;
+            border: 1px solid rgba(156, 39, 176, 0.2);
             width: 90%; 
             max-width: 450px; 
             text-align: center;
-            box-shadow: 0 5px 15px rgba(106, 13, 173, 0.2);
-            margin-bottom: 15px;
+            box-shadow: 0 8px 25px rgba(106, 13, 173, 0.15);
+            margin-bottom: 20px;
         }
         
         .radio-group { 
             margin-bottom: 15px; 
-            background: #ede7f6;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px dashed var(--primary-purple);
+            background: linear-gradient(135deg, #ede7f6, #f3e5f5);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px dashed #9c27b0;
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
@@ -60,85 +86,93 @@
         }
         .radio-group label { 
             font-weight: bold; 
-            color: var(--primary-purple);
+            color: #4a0e4e;
             cursor: pointer;
             font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
         }
         
-        #reader { width: 100%; margin-bottom: 5px; }
+        #reader { width: 100%; margin-bottom: 10px; border-radius: 8px; overflow: hidden; }
         
         #result { 
             display: none; 
-            margin-top: 10px; 
-            padding: 10px; 
+            margin-top: 12px; 
+            padding: 12px; 
             border-radius: 8px; 
             font-weight: bold;
             font-size: 14px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         .manual-input {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #ddd;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
             display: flex;
             gap: 8px;
         }
         .manual-input input {
             flex: 1;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #b39ddb;
-            border-radius: 5px;
-            font-size: 13px;
+            border-radius: 8px;
+            font-size: 14px;
             outline: none;
+            background: #faf5fc;
         }
-        .manual-input input:focus { border-color: var(--primary-purple); }
+        .manual-input input:focus { border-color: #6a0dad; background: white; }
         .manual-input button {
-            background-color: var(--primary-purple);
+            background: var(--primary-gradient);
             color: white;
             border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
+            padding: 10px 16px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
+            box-shadow: 0 2px 5px rgba(106, 13, 173, 0.3);
         }
-        .manual-input button:hover { background-color: var(--accent-purple); }
+        .manual-input button:hover { opacity: 0.9; }
 
         .history-container {
             width: 90%;
             max-width: 450px;
-            background: white;
-            border-radius: 10px;
-            padding: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: var(--card-gradient);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 8px 25px rgba(106, 13, 173, 0.15);
+            border: 1px solid rgba(156, 39, 176, 0.2);
         }
-        .history-container h3 { margin-top: 0; color: var(--primary-purple); font-size: 15px; border-bottom: 2px solid var(--light-purple); padding-bottom: 6px; }
+        .history-container h3 { margin-top: 0; color: #4a0e4e; font-size: 16px; border-bottom: 2px solid #ede7f6; padding-bottom: 8px; }
         .history-list {
-            max-height: 150px;
+            max-height: 160px;
             overflow-y: auto;
             text-align: left;
             font-size: 13px;
         }
         .history-item {
-            padding: 6px 0;
+            padding: 8px 0;
             border-bottom: 1px solid #f0f0f0;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
-        .history-time { color: #888; font-size: 11px; }
+        .history-time { color: #777; font-size: 11px; font-weight: bold; background: #ede7f6; padding: 2px 6px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>Absensi Sekolah Digital</h2>
-        <p>10 PS | 10 TKJ A | 10 TKJ B & Guru</p>
+        <!-- Ganti 'logo-ekuintek.png' dengan link gambar logo sekolah Anda jika ada -->
+        <img src="logo-ekuintek.png" alt="Logo SMK Ekuintek" onerror="this.style.display='none'">
+        <h2>SMK EKUINTEK</h2>
+        <p>"Unggul, Berkarakter, dan Berkompeten"</p>
+        <div class="clock-box" id="live-clock">00:00:00 WIB</div>
     </div>
 
     <div class="container">
-        <h3 style="color: var(--primary-purple); margin-top: 0; font-size: 15px;">Pilih Status Kehadiran:</h3>
+        <h3 style="color: #4a0e4e; margin-top: 0; font-size: 15px;">Pilih Status Kehadiran:</h3>
         
         <div class="radio-group">
             <label><input type="radio" name="status" value="Datang" checked> 🟢 Datang</label>
@@ -165,8 +199,19 @@
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxijFYdibuhL0D8T16511Wvpb_nKaOFaoeokoh-HvQxIZCiCL9d0JAHbzbgsQ9-J1CHxw/exec/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxwsbK80mkgfwuJbRUGqEYw-F4hzLVmL-lozLgmTDb8ehM7-LJfpnZIujWsWmcJCw72zg/exec';
         let isProcessing = false;
+
+        // Jam Digital Realtime
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('live-clock').innerText = `${hours}:${minutes}:${seconds} WIB`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
 
         function playBeep(type) {
             try {
@@ -195,13 +240,10 @@
             if (e.key === 'Enter') kirimManual();
         });
 
-        // SCANNER CEPAT DENGAN PEMOTONG 7 DIGIT OTOMATIS
         function onScanSuccess(decodedText, decodedResult) {
             if (isProcessing) return; 
             
             let teksBersih = decodedText.trim().replace(/\s+/g, '');
-            
-            // Otomatis ambil 7 digit pertama (NIS) jika terbaca barcode gabungan
             if (teksBersih.length >= 7) {
                 teksBersih = teksBersih.substring(0, 7);
             }
@@ -211,12 +253,19 @@
 
         function prosesKeSheets(dataTeks) {
             isProcessing = true;
-            const statusAbsen = document.querySelector('input[name="status"]:checked').value;
+            let statusAbsen = document.querySelector('input[name="status"]:checked').value;
             const resultBox = document.getElementById('result');
             
+            // CEK OTOMATIS: Jika status dipilih Datang tapi waktu scan > 06:45, ubah jadi Telat di sisi UI
+            const now = new Date();
+            const jamMenitSekarang = parseInt(String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0'));
+            if (statusAbsen === "Datang" && jamMenitSekarang > 645) {
+                statusAbsen = "Telat";
+            }
+
             resultBox.style.display = "block";
-            resultBox.style.backgroundColor = "#d1c4e9";
-            resultBox.style.color = "#311b92";
+            resultBox.style.backgroundColor = "#e1bee7";
+            resultBox.style.color = "#4a0e4e";
             resultBox.innerText = "⏳ Memproses...";
 
             const targetUrl = `${scriptURL}?dataQR=${encodeURIComponent(dataTeks)}&status=${encodeURIComponent(statusAbsen)}`;
@@ -238,7 +287,7 @@
                         resultBox.style.backgroundColor = "var(--success)"; 
                         resultBox.style.color = "white";
                         resultBox.innerText = "✅ " + pesanRes;
-                        tambahKeRiwayat(pesanRes, statusAbsen);
+                        tambahKeRiwayat(pesanRes);
                     } else {
                         playBeep('error');
                         resultBox.style.backgroundColor = "var(--danger)";
@@ -258,12 +307,12 @@
                     resultBox.innerText = "❌ Gagal koneksi!";
                     setTimeout(() => { 
                         resultBox.style.display = "none";
-                        isProcessing = false; 
+                        isProcessing, isProcessing = false; 
                     }, 1200);
                 });
         }
 
-        function tambahKeRiwayat(pesan, status) {
+        function tambahKeRiwayat(pesan) {
             const listContainer = document.getElementById('riwayat-list');
             if(listContainer.innerHTML.includes("Belum ada data")) { listContainer.innerHTML = ""; }
             const waktu = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -274,7 +323,7 @@
         }
 
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-            fps: 15,
+            fps: 10,
             rememberLastUsedCamera: true
         }, false);
         
