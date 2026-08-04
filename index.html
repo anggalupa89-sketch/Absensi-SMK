@@ -168,7 +168,7 @@
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwwMmN_OoskbSyEY98eunWixOP7mHZudEizbZ9i7oCypgRZbiGUu9QyFT79URLX3x984Q/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec';
         
         let isProcessing = false;
 
@@ -215,6 +215,7 @@
             prosesKeSheets(teksBersih);
         }
 
+        // MENGGUNAKAN METODE GET (DIJAMIN MASUK KE GOOGLE APPS SCRIPT TANPA BLOKIR)
         function prosesKeSheets(dataTeks) {
             if (isProcessing) return; 
             isProcessing = true;
@@ -227,11 +228,10 @@
             resultBox.style.color = "#311b92";
             resultBox.innerText = "⏳ Memproses data...";
 
-            const formData = new URLSearchParams();
-            formData.append('dataQR', dataTeks);
-            formData.append('status', statusAbsen);
+            // Gabungkan parameter langsung ke dalam URL (Metode GET)
+            const targetUrl = `${scriptURL}?dataQR=${encodeURIComponent(dataTeks)}&status=${encodeURIComponent(statusAbsen)}`;
 
-            fetch(scriptURL, { method: 'POST', body: formData})
+            fetch(targetUrl)
                 .then(response => response.text())
                 .then(result => {
                     let responseSplit = result.split("|");
@@ -296,7 +296,6 @@
             listContainer.prepend(div);
         }
 
-        // DIKEMBALIKAN KE SETELAN AWAL (Tanpa pembatas kotak qrbox yang kaku)
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
             fps: 10 
         }, false);
