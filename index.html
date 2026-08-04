@@ -11,6 +11,9 @@
             --primary-purple: #6a0dad;
             --light-purple: #f3e5f5;
             --accent-purple: #9c27b0;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
         }
         body {
             background-color: var(--light-purple);
@@ -19,6 +22,7 @@
             display: flex; 
             flex-direction: column; 
             align-items: center;
+            padding-bottom: 50px;
         }
         .header {
             background-color: var(--primary-purple); 
@@ -27,47 +31,109 @@
             text-align: center; 
             padding: 15px 0;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
-        .header p {
-            margin: 5px 0 0 0;
-            font-size: 14px;
-        }
+        .header p { margin: 5px 0 0 0; font-size: 14px; }
+        
         .container {
             background: white; 
             padding: 20px; 
             border-radius: 10px;
-            margin-top: 20px; 
             border: 2px solid var(--primary-purple);
             width: 90%; 
-            max-width: 400px; 
+            max-width: 450px; 
             text-align: center;
             box-shadow: 0 5px 15px rgba(106, 13, 173, 0.2);
+            margin-bottom: 20px;
         }
+        
+        /* Modifikasi Radio Group agar rapi untuk 4 pilihan */
         .radio-group { 
             margin-bottom: 20px; 
             background: #ede7f6;
-            padding: 12px;
+            padding: 15px;
             border-radius: 8px;
             border: 1px dashed var(--primary-purple);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
         }
         .radio-group label { 
-            margin: 0 10px; 
             font-weight: bold; 
             color: var(--primary-purple);
             cursor: pointer;
-            font-size: 16px;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
-        #reader {
-            width: 100%;
-        }
+        
+        #reader { width: 100%; margin-bottom: 10px; }
+        
         #result { 
             display: none; 
             margin-top: 15px; 
             padding: 15px; 
-            border-radius: 5px; 
+            border-radius: 8px; 
             font-weight: bold;
-            font-size: 16px;
+            font-size: 15px;
+            animation: fadeIn 0.3s ease-in-out;
         }
+
+        /* Desain Input Manual */
+        .manual-input {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+        }
+        .manual-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #b39ddb;
+            border-radius: 5px;
+            font-size: 14px;
+            outline: none;
+        }
+        .manual-input input:focus { border-color: var(--primary-purple); }
+        .manual-input button {
+            background-color: var(--primary-purple);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .manual-input button:hover { background-color: var(--accent-purple); }
+
+        /* Desain Tabel Riwayat */
+        .history-container {
+            width: 90%;
+            max-width: 450px;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .history-container h3 { margin-top: 0; color: var(--primary-purple); font-size: 16px; border-bottom: 2px solid var(--light-purple); padding-bottom: 10px; }
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            text-align: left;
+            font-size: 14px;
+        }
+        .history-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .history-time { color: #888; font-size: 12px; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -78,15 +144,14 @@
     </div>
 
     <div class="container">
-        <h3 style="color: var(--primary-purple); margin-top: 0;">Pilih Status Absen:</h3>
+        <h3 style="color: var(--primary-purple); margin-top: 0; font-size: 16px;">Pilih Status Kehadiran:</h3>
         
-        <!-- Pilihan Datang atau Pulang -->
+        <!-- Pilihan Datang, Pulang, Sakit, Izin -->
         <div class="radio-group">
-            <input type="radio" id="datang" name="status" value="Datang" checked>
-            <label for="datang">🟢 Masuk (Datang)</label>
-            
-            <input type="radio" id="pulang" name="status" value="Pulang">
-            <label for="pulang">🟣 Pulang</label>
+            <label><input type="radio" name="status" value="Datang" checked> 🟢 Datang</label>
+            <label><input type="radio" name="status" value="Pulang"> 🔴 Pulang</label>
+            <label><input type="radio" name="status" value="Sakit"> 🟡 Sakit</label>
+            <label><input type="radio" name="status" value="Izin"> 🔵 Izin</label>
         </div>
 
         <!-- Area Kamera Scanner -->
@@ -94,15 +159,29 @@
         
         <!-- Area Notifikasi Hasil -->
         <div id="result">Hasil scan akan muncul di sini...</div>
+
+        <!-- Area Input Manual -->
+        <div class="manual-input">
+            <input type="text" id="input-manual" placeholder="Ketik NIS Manual...">
+            <button onclick="kirimManual()">Absen</button>
+        </div>
+    </div>
+
+    <!-- Tabel Riwayat Singkat -->
+    <div class="history-container">
+        <h3>Riwayat Masuk Hari Ini</h3>
+        <div class="history-list" id="riwayat-list">
+            <div class="history-item" style="justify-content: center; color: #aaa;">Belum ada data...</div>
+        </div>
     </div>
 
     <script>
-        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
+        // PASTIKAN URL INI BENAR
         const scriptURL = 'https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec';
         
         let isProcessing = false;
 
-        // Fungsi pembuat suara Beep otomatis (Tanpa file eksternal)
+        // Fungsi pembuat suara Beep
         function playBeep(type) {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -113,25 +192,41 @@
                 gainNode.connect(audioCtx.destination);
                 
                 if (type === 'datang') {
-                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Suara beep nada tinggi
+                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); 
                 } else if (type === 'pulang') {
-                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime); // Suara beep nada rendah
+                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime); 
                 } else {
-                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime); // Suara error (rendah banget)
+                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime); 
                 }
                 
                 oscillator.type = 'sine';
                 gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
                 
                 oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.15); // Durasi bunyi 0.15 detik
-            } catch(e) {
-                console.log("Audio tidak didukung browser");
-            }
+                oscillator.stop(audioCtx.currentTime + 0.15); 
+            } catch(e) { console.log("Audio tidak didukung"); }
         }
 
+        // Pemicu Input Manual
+        function kirimManual() {
+            const nis = document.getElementById('input-manual').value.trim();
+            if(!nis) { alert("NIS tidak boleh kosong!"); return; }
+            document.getElementById('input-manual').value = ""; // kosongkan form
+            prosesKeSheets(nis);
+        }
+
+        // Event enter untuk input manual
+        document.getElementById('input-manual').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') kirimManual();
+        });
+
+        // Pemicu dari Kamera Scanner
         function onScanSuccess(decodedText, decodedResult) {
-            // PROTEKSI ANTI-SCAN BERULANG (Jeda 4 detik agar tidak tidak sengaja scan dobel)
+            prosesKeSheets(decodedText);
+        }
+
+        // Fungsi Inti Mengirim Data
+        function prosesKeSheets(dataTeks) {
             if (isProcessing) return; 
             isProcessing = true;
 
@@ -144,7 +239,7 @@
             resultBox.innerText = "⏳ Memproses data...";
 
             const formData = new URLSearchParams();
-            formData.append('dataQR', decodedText);
+            formData.append('dataQR', dataTeks);
             formData.append('status', statusAbsen);
 
             fetch(scriptURL, { method: 'POST', body: formData})
@@ -152,32 +247,29 @@
                 .then(result => {
                     let responseSplit = result.split("|");
                     let statusRes = responseSplit[0];
-                    let pesanRes = responseSplit[1];
+                    let pesanRes = responseSplit[1] || result; // Fallback jika format salah
 
                     if (statusRes === "DOUBLE") {
-                        playBeep('error'); // Suara peringatan
-                        resultBox.style.backgroundColor = "#ff9800"; // Oranye
+                        playBeep('error'); 
+                        resultBox.style.backgroundColor = "var(--warning)"; 
                         resultBox.style.color = "white";
                         resultBox.innerText = "⚠️ " + pesanRes;
                     } else if (statusRes === "SUKSES") {
-                        // Membedakan suara beep berdasarkan jenis absen (Datang / Pulang)
-                        if (statusAbsen === "Datang") {
-                            playBeep('datang');
-                        } else {
-                            playBeep('pulang');
-                        }
+                        if (statusAbsen === "Datang") playBeep('datang');
+                        else playBeep('pulang');
 
-                        resultBox.style.backgroundColor = "#4caf50"; // Hijau
+                        resultBox.style.backgroundColor = "var(--success)"; 
                         resultBox.style.color = "white";
                         resultBox.innerText = "✅ " + pesanRes;
+
+                        tambahKeRiwayat(pesanRes, statusAbsen);
                     } else {
-                        playBeep('datang');
-                        resultBox.style.backgroundColor = "#2196f3";
+                        playBeep('error');
+                        resultBox.style.backgroundColor = "var(--danger)";
                         resultBox.style.color = "white";
-                        resultBox.innerText = result;
+                        resultBox.innerText = "❌ " + (pesanRes || result);
                     }
 
-                    // Jeda waktu 4 detik sebelum kamera bisa scan barcode berikutnya (Mencegah scan tidak sengaja)
                     setTimeout(() => { 
                         resultBox.style.display = "none";
                         isProcessing = false; 
@@ -185,7 +277,7 @@
                 })
                 .catch(error => {
                     playBeep('error');
-                    resultBox.style.backgroundColor = "#f44336"; // Merah
+                    resultBox.style.backgroundColor = "var(--danger)"; 
                     resultBox.style.color = "white";
                     resultBox.innerText = "❌ Gagal terhubung ke server!";
                     
@@ -196,7 +288,30 @@
                 });
         }
 
-        // Inisialisasi Kamera Scanner
+        // Fungsi Menambah ke List Bawah
+        function tambahKeRiwayat(pesan, status) {
+            const listContainer = document.getElementById('riwayat-list');
+            
+            // Hapus tulisan "Belum ada data" jika ada
+            if(listContainer.innerHTML.includes("Belum ada data")) {
+                listContainer.innerHTML = "";
+            }
+
+            const waktu = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            
+            // Buat elemen baru
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div><strong>${pesan.replace('Berhasil absen: ', '')}</strong> <span style="font-size:11px; color:#9c27b0;">(${status})</span></div>
+                <div class="history-time">${waktu}</div>
+            `;
+            
+            // Masukkan ke paling atas
+            listContainer.prepend(div);
+        }
+
+        // Inisialisasi Kamera Scanner (menggunakan cara yang sudah berhasil dari Anda)
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
             fps: 10, 
             qrbox: {width: 250, height: 250} 
