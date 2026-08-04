@@ -47,7 +47,6 @@
             margin-bottom: 20px;
         }
         
-        /* Modifikasi Radio Group agar rapi untuk 4 pilihan */
         .radio-group { 
             margin-bottom: 20px; 
             background: #ede7f6;
@@ -81,7 +80,6 @@
             animation: fadeIn 0.3s ease-in-out;
         }
 
-        /* Desain Input Manual */
         .manual-input {
             margin-top: 15px;
             padding-top: 15px;
@@ -109,7 +107,6 @@
         }
         .manual-input button:hover { background-color: var(--accent-purple); }
 
-        /* Desain Tabel Riwayat */
         .history-container {
             width: 90%;
             max-width: 450px;
@@ -146,7 +143,6 @@
     <div class="container">
         <h3 style="color: var(--primary-purple); margin-top: 0; font-size: 16px;">Pilih Status Kehadiran:</h3>
         
-        <!-- Pilihan Datang, Pulang, Sakit, Izin -->
         <div class="radio-group">
             <label><input type="radio" name="status" value="Datang" checked> 🟢 Datang</label>
             <label><input type="radio" name="status" value="Pulang"> 🔴 Pulang</label>
@@ -154,20 +150,16 @@
             <label><input type="radio" name="status" value="Izin"> 🔵 Izin</label>
         </div>
 
-        <!-- Area Kamera Scanner -->
         <div id="reader"></div>
         
-        <!-- Area Notifikasi Hasil -->
         <div id="result">Hasil scan akan muncul di sini...</div>
 
-        <!-- Area Input Manual -->
         <div class="manual-input">
             <input type="text" id="input-manual" placeholder="Ketik NIS Manual...">
             <button onclick="kirimManual()">Absen</button>
         </div>
     </div>
 
-    <!-- Tabel Riwayat Singkat -->
     <div class="history-container">
         <h3>Riwayat Masuk Hari Ini</h3>
         <div class="history-list" id="riwayat-list">
@@ -176,12 +168,10 @@
     </div>
 
     <script>
-        // URL WEB APP GOOGLE SCRIPT ANDA
         const scriptURL = 'https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec';
         
         let isProcessing = false;
 
-        // Fungsi pembuat suara Beep
         function playBeep(type) {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -207,7 +197,6 @@
             } catch(e) { console.log("Audio tidak didukung"); }
         }
 
-        // Pemicu Input Manual
         function kirimManual() {
             const nis = document.getElementById('input-manual').value;
             const nisBersih = nis.trim().replace(/\s+/g, '');
@@ -221,16 +210,11 @@
             if (e.key === 'Enter') kirimManual();
         });
 
-        // Pemicu dari Kamera Scanner (DILENGKAPI DETEKTIF BARCODE)
         function onScanSuccess(decodedText, decodedResult) {
-            // MUNCULKAN KOTAK PESAN UNTUK MELIHAT ISI ASLI BARCODE
-            alert("Scanner mendeteksi teks ini:\n👉 [" + decodedText + "] 👈\n\nBandingkan dengan NIS di Master Data Anda!");
-
             let teksBersih = decodedText.trim().replace(/\s+/g, '');
             prosesKeSheets(teksBersih);
         }
 
-        // Fungsi Inti Mengirim Data ke Google Sheets
         function prosesKeSheets(dataTeks) {
             if (isProcessing) return; 
             isProcessing = true;
@@ -293,7 +277,6 @@
                 });
         }
 
-        // Fungsi Menambah ke List Riwayat Bawah
         function tambahKeRiwayat(pesan, status) {
             const listContainer = document.getElementById('riwayat-list');
             
@@ -313,10 +296,9 @@
             listContainer.prepend(div);
         }
 
-        // Inisialisasi Kamera Scanner
+        // DIKEMBALIKAN KE SETELAN AWAL (Tanpa pembatas kotak qrbox yang kaku)
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-            fps: 10, 
-            qrbox: {width: 250, height: 250} 
+            fps: 10 
         }, false);
         
         html5QrcodeScanner.render(onScanSuccess);
