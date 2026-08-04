@@ -3,169 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Absensi QR Code</title>
+    <title>Absensi Modern</title>
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <!-- Pustaka Scanner QR -->
+    <!-- Library Scanner -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+    <style>
+        .bg-gradient-purple { background: linear-gradient(135deg, #6b21a8 0%, #4c1d95 100%); }
+        /* Mempercantik tombol bawaan dari library scanner */
+        #reader button {
+            background-color: #6b21a8; color: white; padding: 8px 16px; border-radius: 8px; margin-top: 10px; border: none; font-weight: bold; cursor: pointer;
+        }
+        #reader select {
+            padding: 8px; border-radius: 8px; border: 1px solid #d8b4fe; margin-bottom: 10px; width: 100%;
+        }
+        #reader { border: none !important; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-purple-50 min-h-screen text-gray-800 flex flex-col items-center p-4">
 
-    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6">
-        <h1 class="text-2xl font-bold text-center text-gray-800 mb-2">Absensi Siswa</h1>
-        <p class="text-sm text-center text-gray-500 mb-4">HP dengan banyak lensa kamera? Pilih manual di bawah.</p>
+    <!-- Header -->
+    <div class="max-w-xl w-full bg-gradient-purple text-white rounded-2xl shadow-xl p-6 mb-6 text-center">
+        <h1 class="text-3xl font-extrabold tracking-wide mb-1">ABSENSI SISWA</h1>
+        <p class="text-purple-200 text-sm">Sistem Cepat & Anti-Error</p>
+    </div>
 
-        <!-- Tombol 1: Minta Izin & Cari Daftar Kamera -->
-        <div id="init-container" class="mb-4">
-            <button onclick="cariKamera()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition text-sm">
-                1. Beri Izin & Cari Kamera
-            </button>
-        </div>
-
-        <!-- Tombol 2: Pilih Lensa (Muncuk Setelah Tombol 1 Ditekan) -->
-        <div id="camera-selection-container" class="mb-4 hidden p-3 bg-blue-50 rounded-lg border border-blue-100">
-            <label class="block text-xs font-semibold text-blue-800 mb-1">Daftar Lensa Kamera Terdeteksi:</label>
-            <select id="camera-select" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
-            </select>
-            <button onclick="mulaiKameraPilihan()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition text-sm">
-                2. Nyalakan Kamera Terpilih
-            </button>
-        </div>
-
-        <!-- Area Kamera Scanner -->
-        <div id="reader" class="w-full rounded-lg overflow-hidden border-2 border-dashed border-gray-300 mb-4 bg-black flex items-center justify-center text-gray-400 text-sm" style="min-height: 250px;">
-            Kamera belum aktif
-        </div>
-
-        <!-- Status Hasil Scan -->
-        <div id="result-container" class="hidden p-4 rounded-lg text-center font-medium mb-4"></div>
-
-        <!-- Input Manual Alternatif -->
-        <div class="mt-4 pt-4 border-t border-gray-200">
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Atau Ketik NIS Secara Manual:</label>
-            <div class="flex gap-2">
-                <input type="text" id="manual-nis" placeholder="Masukkan NIS..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button onclick="kirimManual()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">Kirim</button>
+    <div class="max-w-xl w-full space-y-6">
+        
+        <!-- Pilihan Status Absen -->
+        <div class="bg-white rounded-2xl shadow-lg p-4">
+            <label class="block text-xs font-bold text-purple-900 uppercase tracking-wider mb-2">Status Absen:</label>
+            <div class="grid grid-cols-5 gap-2">
+                <button type="button" onclick="setStatus('Auto')" id="btn-Auto" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-600 bg-purple-600 text-white">Auto</button>
+                <button type="button" onclick="setStatus('Datang')" id="btn-Datang" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700">Datang</button>
+                <button type="button" onclick="setStatus('Pulang')" id="btn-Pulang" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700">Pulang</button>
+                <button type="button" onclick="setStatus('Sakit')" id="btn-Sakit" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700">Sakit</button>
+                <button type="button" onclick="setStatus('Izin')" id="btn-Izin" class="status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700">Izin</button>
             </div>
         </div>
+
+        <!-- ENGINE SCANNER ASLI BAWAAN LIBRARY (Pasti Jalan) -->
+        <div class="bg-white rounded-2xl shadow-lg p-5">
+            <h2 class="font-bold text-sm text-purple-900 mb-3 flex justify-between">
+                <span>Kamera Scanner</span>
+                <span id="scan-status-badge" class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">Mode: Auto</span>
+            </h2>
+            
+            <!-- Tempat Scanner Bawaan akan dimunculkan -->
+            <div id="reader" class="w-full rounded-xl overflow-hidden border-2 border-purple-100 bg-gray-50 p-2"></div>
+        </div>
+
+        <!-- Input Manual -->
+        <div class="bg-white rounded-2xl shadow-lg p-5">
+            <label class="block text-xs font-bold text-purple-900 uppercase mb-2">Ketik NIS Manual:</label>
+            <div class="flex gap-2">
+                <input type="text" id="manual-nis" placeholder="Ketik NIS..." class="flex-1 border-2 border-purple-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-purple-600">
+                <button onclick="prosesManual()" class="bg-purple-600 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-md">Kirim</button>
+            </div>
+        </div>
+
+        <!-- Notifikasi Hasil -->
+        <div id="result-container" class="hidden p-4 rounded-2xl text-center font-bold text-sm shadow-md transition-all duration-300"></div>
+
+        <!-- List Riwayat -->
+        <div class="bg-white rounded-2xl shadow-lg p-5 mb-10">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="font-bold text-sm text-purple-900 uppercase">Daftar Masuk Hari Ini</h2>
+                <span id="counter-hadir" class="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-full">0 Siswa</span>
+            </div>
+            <div class="overflow-x-auto max-h-60 overflow-y-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-purple-50 text-purple-800 sticky top-0">
+                        <tr>
+                            <th class="p-2">Waktu</th>
+                            <th class="p-2">Data Siswa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list-absen-body" class="divide-y divide-purple-50">
+                        <tr><td colspan="2" class="text-center text-gray-400 py-4">Belum ada data.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <script>
         // ==========================================
-        // GANTI URL DI BAWAH INI DENGAN URL WEB APP ANDA
+        // GANTI URL DI BAWAH INI
         // ==========================================
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxZtDi4uDpPSZqQLV14z9Y_eHDMN4WPAGJrM6CXOaUPdBeFXR1oRhDWzgC5TclvUGhfDQ/exec";
 
+        let currentStatus = "Auto";
         let isProcessing = false;
-        let html5QrCode = null;
+        let listSiswaHariIni = [];
 
+        // Fungsi Ganti Status
+        function setStatus(status) {
+            currentStatus = status;
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.className = "status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-200 text-purple-700 transition";
+            });
+            document.getElementById(`btn-${status}`).className = "status-btn py-2 text-xs font-bold rounded-xl border-2 border-purple-600 bg-purple-600 text-white transition";
+            document.getElementById('scan-status-badge').innerText = `Mode: ${status}`;
+        }
+
+        // Fungsi yang dipanggil saat scanner berhasil membaca
         function onScanSuccess(decodedText, decodedResult) {
             if (isProcessing) return;
             isProcessing = true;
-            console.log(`Scan berhasil: ${decodedText}`);
             kirimKeGoogleSheets(decodedText);
         }
 
-        // Langkah 1: Memaksa browser meminta izin dan mencari daftar lensa
-        function cariKamera() {
-            Html5Qrcode.getCameras().then(devices => {
-                if (devices && devices.length) {
-                    document.getElementById('init-container').classList.add('hidden');
-                    const selectionContainer = document.getElementById('camera-selection-container');
-                    selectionContainer.classList.remove('hidden');
-                    
-                    const select = document.getElementById('camera-select');
-                    select.innerHTML = ""; 
-                    
-                    // Masukkan semua lensa yang ada di HP ke dalam pilihan dropdown
-                    devices.forEach((device, index) => {
-                        let option = document.createElement('option');
-                        option.value = device.id;
-                        option.text = device.label || `Lensa Kamera ${index + 1}`;
-                        select.appendChild(option);
-                    });
-                    
-                    // Pilih lensa terakhir sebagai default (biasanya lensa utama belakang di Android)
-                    select.selectedIndex = devices.length - 1;
+        // =======================================================
+        // INISIALISASI SCANNER BAWAAN LIBRARY (ANTI-MACET)
+        // =======================================================
+        document.addEventListener("DOMContentLoaded", function () {
+            // Menggunakan Html5QrcodeScanner (Sistem Otomatis dari pembuatnya)
+            let html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader",
+                { 
+                    fps: 10, 
+                    qrbox: {width: 250, height: 250},
+                    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA, Html5QrcodeScanType.SCAN_TYPE_FILE]
+                },
+                false
+            );
+            
+            // Render UI bawaannya
+            html5QrcodeScanner.render(onScanSuccess);
+        });
+        // =======================================================
 
-                } else {
-                    alert("Tidak ada kamera yang terdeteksi di perangkat ini.");
-                }
-            }).catch(err => {
-                console.error("Gagal mendapat daftar kamera:", err);
-                alert("Browser memblokir kamera. Silakan cek ikon Gembok di atas dan Izinkan kamera!");
-            });
-        }
-
-        // Langkah 2: Mulai kamera menggunakan ID Lensa yang dipilih di dropdown
-        function mulaiKameraPilihan() {
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            } else if (html5QrCode.isScanning) {
-                // Jika sedang nyala lalu mau ganti lensa, matikan dulu
-                html5QrCode.stop().then(() => jalankanScanner()).catch(console.error);
-                return;
-            }
-            jalankanScanner();
-        }
-
-        function jalankanScanner() {
-            const cameraId = document.getElementById('camera-select').value;
-            const config = { fps: 15, qrbox: { width: 250, height: 250 } };
-
-            html5QrCode.start(
-                cameraId, // Tembak langsung ID spesifik lensanya
-                config,
-                onScanSuccess
-            ).then(() => {
-                document.getElementById('reader').innerHTML = ""; 
-            }).catch(err => {
-                console.error("Gagal membuka kamera:", err);
-                alert("Gagal membuka lensa ini (Mungkin lensa sensor). Silakan pilih lensa lain di daftar!");
-            });
-        }
-
-        // Fungsi kirim data
-        function kirimManual() {
-            const inputVal = document.getElementById('manual-nis').value.trim();
-            if (!inputVal) {
-                alert("NIS tidak boleh kosong!");
-                return;
-            }
+        function prosesManual() {
+            const nis = document.getElementById('manual-nis').value.trim();
+            if (!nis) return;
             if (isProcessing) return;
             isProcessing = true;
             document.getElementById('manual-nis').value = "";
-            kirimKeGoogleSheets(inputVal);
+            kirimKeGoogleSheets(nis);
         }
+
+        document.getElementById('manual-nis').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') prosesManual();
+        });
 
         function kirimKeGoogleSheets(nisOrData) {
             const resultDiv = document.getElementById('result-container');
-            resultDiv.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800', 'bg-red-100', 'text-red-800');
-            resultDiv.className = "p-4 rounded-lg text-center font-medium mb-4 bg-blue-100 text-blue-800";
-            resultDiv.innerHTML = "Mengirim data...";
+            resultDiv.className = "p-4 rounded-2xl text-center font-bold text-sm shadow-md bg-purple-100 text-purple-800 block";
+            resultDiv.innerHTML = "Memproses absensi... ⚡";
 
-            const targetUrl = `${URL_APPS_SCRIPT}?dataQR=${encodeURIComponent(nisOrData)}`;
+            let targetUrl = `${URL_APPS_SCRIPT}?dataQR=${encodeURIComponent(nisOrData)}`;
+            if (currentStatus !== "Auto") targetUrl += `&status=${encodeURIComponent(currentStatus)}`;
 
             fetch(targetUrl)
-                .then(response => response.text())
+                .then(res => res.text())
                 .then(resText => {
-                    if (resText.startsWith("SUKSES")) {
-                        resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-green-100 text-green-800";
-                        resultDiv.innerHTML = resText.replace("SUKSES|", "BERHASIL: ");
-                    } else if (resText.startsWith("DOUBLE")) {
-                        resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-yellow-100 text-yellow-800";
-                        resultDiv.innerHTML = resText.replace("DOUBLE|", "PERHATIAN: ");
-                    } else {
-                        resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-red-100 text-red-800";
-                        resultDiv.innerHTML = resText.replace("ERROR|", "GAGAL: ");
-                    }
-                    setTimeout(() => { isProcessing = false; }, 2500);
+                    let badgeColor = "bg-green-100 text-green-800";
+                    let prefix = "BERHASIL: ";
+
+                    if (resText.startsWith("DOUBLE")) { badgeColor = "bg-yellow-100 text-yellow-800"; prefix = "PERHATIAN: "; } 
+                    else if (resText.startsWith("ERROR")) { badgeColor = "bg-red-100 text-red-800"; prefix = "GAGAL: "; }
+
+                    resultDiv.className = `p-4 rounded-2xl text-center font-bold text-sm shadow-md ${badgeColor} block`;
+                    resultDiv.innerHTML = resText.replace("SUKSES|", prefix).replace("DOUBLE|", prefix).replace("ERROR|", prefix);
+
+                    if (resText.startsWith("SUKSES")) tambahKeListRiwayat(resText);
+
+                    setTimeout(() => { resultDiv.classList.add('hidden'); isProcessing = false; }, 2000);
                 })
                 .catch(err => {
-                    resultDiv.className = "p-4 rounded-lg text-center font-bold mb-4 bg-red-100 text-red-800";
-                    resultDiv.innerHTML = "Gagal terhubung ke server!";
-                    isProcessing = false;
+                    resultDiv.className = "p-4 rounded-2xl text-center font-bold text-sm shadow-md bg-red-100 text-red-800 block";
+                    resultDiv.innerHTML = "Gagal terhubung!";
+                    setTimeout(() => { resultDiv.classList.add('hidden'); isProcessing = false; }, 2000);
                 });
+        }
+
+        function tambahKeListRiwayat(responseFromServer) {
+            const waktu = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            listSiswaHariIni.unshift({ waktu: waktu, pesan: responseFromServer.replace("SUKSES|", "") });
+            
+            const tbody = document.getElementById('list-absen-body');
+            document.getElementById('counter-hadir').innerText = `${listSiswaHariIni.length} Siswa`;
+            
+            let html = "";
+            listSiswaHariIni.forEach(item => {
+                html += `<tr class="border-b border-purple-50"><td class="p-2 font-medium text-purple-900">${item.waktu}</td><td class="p-2 font-bold text-gray-800">${item.pesan}</td></tr>`;
+            });
+            tbody.innerHTML = html;
         }
     </script>
 </body>
